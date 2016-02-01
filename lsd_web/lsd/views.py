@@ -5,4 +5,14 @@ from django.http import HttpResponse
 
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the polls index.")
+    context = {
+        
+    }
+    return  render(request, 'lsd/new_run.html', context)
+
+def  submit_run(request):
+    context = {
+        'inputtree':request.POST['inputtree']
+    }
+    return  render(request, 'lsd/submit_run.html', context)
+    

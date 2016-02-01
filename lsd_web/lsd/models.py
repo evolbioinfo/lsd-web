@@ -26,7 +26,7 @@ class RunTrees(models.Model):
         on_delete=models.CASCADE
     )
     tree_newick       = models.TextField()
-    tree_index        = models.IntegerField()
+    tree_index        = models.IntegerField(default=0)
     tree_subst_rate   = models.FloatField()
 
 class RunTaxonDates(models.Model):

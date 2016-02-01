@@ -1,0 +1,9 @@
+<html>
+<h1>New LSD Run</h1>
+
+<form action="{% url 'lsd:submit_run' %}" method="post">
+{% csrf_token %}
+<input type="file" name="inputtree" />
+<input type="submit" value="lsdrun" />
+</form>
+</html>
