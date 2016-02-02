@@ -28,10 +28,17 @@ DEBUG = True
 ALLOWED_HOSTS = []
 
 
+# CELERY SETTINGS
+BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = "redis"
+
 # Application definition
 
 INSTALLED_APPS = [
-    'lsd.apps.LsdConfig',
+    'lsd',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
