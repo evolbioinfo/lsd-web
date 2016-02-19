@@ -1,9 +1,124 @@
 {% include "lsd/header.html" %}
 
+<h1>LSD</h1>
+
+<ul class="nav nav-tabs">
+  <li class="active"><a href="#trees" aria-controls="trees" role="tab" data-toggle="tab">Input tree(s)</a></li>
+  <li><a href="#options" aria-controls="options" role="tab" data-toggle="tab">Options</a></li>
+</ul>
+
 <form action="{% url 'lsd:submit_run' %}" method="post">
 {% csrf_token %}
-<input type="file" name="inputtree" />
-<input type="submit" value="lsdrun" />
+
+<!-- Tab panes -->
+<div class="tab-content">
+  <div role="tabpanel" class="tab-pane active" id="trees">
+    <div class="form-group row">
+      <label for="inputtree" class="col-sm-2 form-control-label">Choose input tree file</label>
+      <div class="col-sm-10">
+	<input type="file" class="form-control-file" id="inputtree" name="inputtree" />
+	<small class="text-muted">The input file may contain one or several trees in newick format</small>
+      </div>
+    </div>
+    <div class="form-group row">
+      <label for="inputtree" class="col-sm-2 form-control-label">Date information      
+	<small class="text-muted">You can enter a date file or just root date and tips date</small>
+      </label>
+      <div class="col-sm-10">
+	<div class="radio">
+	  <label>
+	    <input type="radio" data-target="div#yesdates" data-toggle="radio-collapse" name="datesornot" id="yesdates" value="yes" checked/>
+	    You have a date file
+ 	  </label>
+	</div>
+	<div class="radio">
+	  <label>
+	    <input type="radio" data-target="div#nodates" data-toggle="radio-collapse" name="datesornot" id="nodates" value="no"/>
+	    You have no date file
+ 	  </label>
+	</div>
+
+	<fieldset class="form-group">
+	  <div id="yesdates">
+	    Choose input date file
+	    <input type="file" class="form-control-file" id="inputdate" name="inputdate" />
+	    <small class="text-muted">The input file should be formated as : first line: number of dates, and then two tab separated columns with 1) taxon name, and 2) date</small>
+	  </div>
+	  <div id="nodates">
+	    <fieldset class="form-group">
+	      <label for="enterrootdate">Enter the date of the root</label>
+	      <input type="text" class="form-control" id="enterrootdate" placeholder="Root date">
+	    </fieldset>
+	    <fieldset class="form-group">
+	      <label for="entertipsdate">Enter the date of the tips</label>
+	      <input type="text" class="form-control" id="entertipsdate" placeholder="Tips date">
+	    </fieldset>
+	  </div>
+	</fieldset>
+      </div>
+    </div>
+  </div>
+
+  <div role="tabpanel" class="tab-pane" id="options">
+
+    <div class="form-group row">
+      <label class="col-sm-2">Constraints</label>
+      <div class="col-sm-10">
+        <input type="checkbox" id="constraints" > With constraints
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label class="col-sm-2">Low bound for the rate</label>
+      <div class="col-sm-10">
+	<input type="text" class="form-control" id="lowboundrate" placeholder="0.000010">
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label class="col-sm-2">Variances</label>
+      <div class="col-sm-10">
+        <input type="checkbox" data-target="div#yesvariances" data-toggle="radio-collapse" name="variancesornot" id="variances" > With variances
+	<fieldset class="form-group">
+	  <div id="yesvariances">
+	    Parameter of variance <input type="text" class="form-control" id="varianceparam" placeholder="10">
+	    Sequence Length <input type="text" class="form-control" id="seqlength" placeholder="1000">
+	  </div>
+	</fieldset>
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label class="col-sm-2">Estimate the root</label>
+      <div class="col-sm-10">
+	<select class="c-select">
+	  <option vlaue="no" selected>No</option>
+	  <option value="given">Around the given root</option>
+	  <option value="all">Searches on all branches</option>
+	</select>
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label class="col-sm-2 form-control-label">Substitution rates</label>
+      <div class="col-sm-10">
+	<input type="file" class="form-control-file" id="substrates" name="substrates" />
+	<small class="text-muted">The input file should contain one line per rate (one rate per input tree)</small>
+      </div>
+    </div>
+
+    <div class="form-group row">
+      <label class="col-sm-2 form-control-label">Outgroups</label>
+      <div class="col-sm-10">
+	<input type="file" class="form-control-file" id="outgroups" name="outgroups" />
+	<small class="text-muted">Will root the tree using an outgroup.The input file should contain one line per taxon. It must be monophyletic</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<button type="submit" class="btn btn-primary">Run LSD</button>
 </form>
 
 {% include "lsd/footer.html" %}
