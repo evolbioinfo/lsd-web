@@ -7,7 +7,7 @@
   <li><a href="#options" aria-controls="options" role="tab" data-toggle="tab">Options</a></li>
 </ul>
 
-<form action="{% url 'lsd:submit_run' %}" method="post">
+<form action="{% url 'lsd:submit_run' %}" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 
 <!-- Tab panes -->
@@ -47,11 +47,11 @@
 	  <div id="nodates">
 	    <fieldset class="form-group">
 	      <label for="enterrootdate">Enter the date of the root</label>
-	      <input type="text" class="form-control" id="enterrootdate" placeholder="Root date">
+	      <input type="text" class="form-control" name="rootdate" id="enterrootdate" placeholder="Root date">
 	    </fieldset>
 	    <fieldset class="form-group">
 	      <label for="entertipsdate">Enter the date of the tips</label>
-	      <input type="text" class="form-control" id="entertipsdate" placeholder="Tips date">
+	      <input type="text" class="form-control" name="tipsdate" id="entertipsdate" placeholder="Tips date">
 	    </fieldset>
 	  </div>
 	</fieldset>
@@ -64,14 +64,14 @@
     <div class="form-group row">
       <label class="col-sm-2">Constraints</label>
       <div class="col-sm-10">
-        <input type="checkbox" id="constraints" > With constraints
+        <input type="checkbox" name="constraints" id="constraints" > With constraints
       </div>
     </div>
 
     <div class="form-group row">
       <label class="col-sm-2">Low bound for the rate</label>
       <div class="col-sm-10">
-	<input type="text" class="form-control" id="lowboundrate" placeholder="0.000010">
+	<input type="text" class="form-control" name="lowboundrate" id="lowboundrate" placeholder="0.000010">
       </div>
     </div>
 
@@ -81,8 +81,8 @@
         <input type="checkbox" data-target="div#yesvariances" data-toggle="radio-collapse" name="variancesornot" id="variances" > With variances
 	<fieldset class="form-group">
 	  <div id="yesvariances">
-	    Parameter of variance <input type="text" class="form-control" id="varianceparam" placeholder="10">
-	    Sequence Length <input type="text" class="form-control" id="seqlength" placeholder="1000">
+	    Parameter of variance <input type="text" class="form-control" name="varianceparam" id="varianceparam" placeholder="10">
+	    Sequence Length <input type="text" class="form-control" name="seqlength" id="seqlength" placeholder="1000">
 	  </div>
 	</fieldset>
       </div>
@@ -91,10 +91,10 @@
     <div class="form-group row">
       <label class="col-sm-2">Estimate the root</label>
       <div class="col-sm-10">
-	<select class="c-select">
-	  <option vlaue="no" selected>No</option>
-	  <option value="given">Around the given root</option>
-	  <option value="all">Searches on all branches</option>
+	<select name="estimateroot" class="c-select">
+	  <option value="no" selected>No</option>
+	  <option value="l">Around the given root</option>
+	  <option value="a">Searches on all branches</option>
 	</select>
       </div>
     </div>

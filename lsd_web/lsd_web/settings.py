@@ -34,6 +34,8 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_RESULT_BACKEND = "redis"
+CELERYD_OPTS="--concurrency=1"
+CELERYD_CONCURRENCY = 1
 
 # Application definition
 
