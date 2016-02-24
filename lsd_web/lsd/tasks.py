@@ -4,17 +4,20 @@ from celery import shared_task
 import time
 
 from lsd.models import LSDRun, RunTrees, RunTaxonDates, RunOutGroups
-from lsd import LSDRunner
+from lsd.controlers.LSDRunner import LSDRunner
 
 @shared_task
 def submitLSD(lsdrunid):
     lsdrun = LSDRun.objects.get(id=lsdrunid)
     lsdrun.run_name=submitLSD.request.id
+    lsdrun.run_status=lsdrun.RUNNING
     lsdrun.save();
 
-    runner=LSDRunner.LSDRunner(lsdrun)
+    runner=LSDRunner(lsdrun)
     out = runner.run()
-
+    lsdrun.run_status=lsdrun.FINISHED
+ 
+    lsdrun.save()
     #
     #runner = LSDRunner(lsdrun);
     #runner.run();

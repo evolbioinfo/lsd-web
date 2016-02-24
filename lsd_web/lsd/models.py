@@ -5,6 +5,17 @@ from datetime import datetime
 
 # Create your models here.
 class LSDRun(models.Model):
+    PENDING   = 'P'
+    RUNNING   = 'R'
+    FINISHED  = 'F'
+    ERROR     = 'E'
+    RUNSTATUS = (
+        (PENDING, 'Pending'),
+        (RUNNING, 'Running'),
+        (FINISHED,'Finished'),
+        (ERROR,   'Error')
+    )
+
     run_date             = models.DateTimeField('date of run')
     run_root_date        = models.FloatField(default=0)
     run_tips_date        = models.FloatField(default=1)
@@ -15,6 +26,10 @@ class LSDRun(models.Model):
     run_rooting_method   = models.CharField(max_length=10)
     run_rate_lower_bound = models.FloatField(default=0.00001)
     run_name             = models.CharField(max_length=100, default="No Name")
+    run_status           = models.CharField(max_length=1,default=PENDING, choices=RUNSTATUS)
+    run_err_message      = models.CharField(max_length=1000,default="")
+    run_out_message      = models.CharField(max_length=1000,default="")
+    run_outpath          = models.CharField(max_length=1000,default="")
 
     def __str__(self):
         return self.run_name 
@@ -46,7 +61,7 @@ class RunOutGroups(models.Model):
 
 class ResultTree(models.Model):
     run_tree    = models.ForeignKey(
-        RunTrees,
+        LSDRun,
         on_delete=models.CASCADE
     )
     result_subst_rate = models.FloatField()

@@ -1,7 +1,8 @@
 from lsd.models import LSDRun, RunTrees, RunTaxonDates, RunOutGroups
-from subprocess import call
+from subprocess import Popen, PIPE, STDOUT
 import tempfile
 import os
+import re
 
 class LSDRunner:
     """A runner to launch LSD program"""
@@ -44,7 +45,7 @@ class LSDRunner:
         if self.lsdrun.run_constraints:
             options.append("-c")
 
-        if self.lsdrun.run_rate_lower_bound:
+        if self.lsdrun.run_rate_lower_bound != -1 :
             options.append("-t")
             options.append(str(self.lsdrun.run_rate_lower_bound))
 
@@ -63,8 +64,50 @@ class LSDRunner:
         outputFile=os.path.join(tempdir, "lsdout")
         options.append("-o")
         options.append(outputFile)
-        call([self.lsdpath]+options)
+
+        proc = Popen([self.lsdpath]+options, stdout=PIPE, stderr=PIPE)
+        out, err = proc.communicate()
+        #streamdata = proc.communicate()[0]
+        self.lsdrun.run_err_message=err
+        self.lsdrun.run_out_message=out
+        self.lsdrun.run_outpath=outputFile
         print [self.lsdpath]+options
+        print "COUCOU"
+        print "Error: "+self.lsdrun.run_err_message
+        print "Output: "+self.lsdrun.run_out_message
+        self.lsdrun.save()
+
+        resDateFileName = outputFile+".date.newick"
+        resNWFileName = outputFile+".newick"
+        resNXFileName = outputFile+".nexus"
+        
+        print "Before Results!!!!"
+        if os.path.isfile(resDateFileName):
+            print "Results!!!!"+resDateFileName
+            resDateFile = open(resDateFileName,'r')
+            resNWFile = open(resNWFileName,'r')
+            resNXFile = open(resNXFileName,'r')
+            resFile   = open(outputFile,'r')
+            dates = resDateFile.readlines()
+            nws = resNWFile.readlines()
+            nxs = self.parseNexus(resNXFile)
+            substinfos = self.parseRes(resFile)
+            index = 0
+            for treedate in dates:
+                print "DATE:::"+treedate
+                nw = nws[index]
+                nx = nxs[index]
+                substrate = substinfos[index][0]
+                rootdate  = substinfos[index][1]
+                self.lsdrun.resulttree_set.create(
+                    result_subst_rate = float(substrate),
+                    result_root_date  = float(rootdate),
+                    result_newick     = nw,
+                    result_date_newick= treedate,
+                    result_nexus      = nx
+                )
+                index+=1
+        self.lsdrun.save()
         #tempdir.close()
         return outputFile
 
@@ -81,3 +124,25 @@ class LSDRunner:
         outfile.write(str(len(self.lsdrun.runoutgroups_set.all()))+"\n")
         for group in self.lsdrun.runoutgroups_set.all():
             outfile.write(group.taxon_name+"\n")
+
+    def parseRes(self,resFile):
+        substrate = []
+        p = re.compile("Tree .* rate (.*), tMRCA (.*)")
+        for line in resFile:
+            m = p.match(line)
+            if m:
+                sublistrate = [m.group(1),m.group(2)]
+                substrate.append(sublistrate)
+        return substrate
+
+    def parseNexus(self,nexFile):
+        trees = []
+        p = re.compile("^End;$")
+        tree=""
+        for line in nexFile:
+            tree+=line
+            m = p.match(line)
+            if m:
+                trees.append(tree)
+                tree=""
+        return trees
