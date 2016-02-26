@@ -15,4 +15,17 @@ Trees are : <br/>
 </div>
 {% endfor %}
 
+{% for image in treeimages %}
+<div>
+  <img src="data:image/png;base64,{{image}}"/>
+</div>
+{% endfor %}
+
+{% for image in treedateimages %}
+<div>
+  <img src="data:image/png;base64,{{image}}"/>
+</div>
+{% endfor %}
+
+
 {% endblock %}

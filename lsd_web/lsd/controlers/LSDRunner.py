@@ -138,12 +138,10 @@ class LSDRunner:
 
     def parseNexus(self,nexFile):
         trees = []
-        p = re.compile("^End;$")
+        p = re.compile("tree.*= (.*)")
         tree=""
         for line in nexFile:
-            tree+=line
             m = p.match(line)
             if m:
-                trees.append(tree)
-                tree=""
+                trees.append(m.group(1))
         return trees
