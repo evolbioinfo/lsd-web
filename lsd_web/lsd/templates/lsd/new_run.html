@@ -1,5 +1,6 @@
-{% include "lsd/header.html" %}
+{% extends "lsd/base_generic.html" %}
 
+{% block content %}
 <h1>LSD</h1>
 
 <ul class="nav nav-tabs">
@@ -121,4 +122,4 @@
 <button type="submit" class="btn btn-primary">Run LSD</button>
 </form>
 
-{% include "lsd/footer.html" %}
+{% endblock %}

@@ -127,11 +127,12 @@ class LSDRunner:
 
     def parseRes(self,resFile):
         substrate = []
-        p = re.compile("Tree .* rate (.*), tMRCA (.*)")
+        p = re.compile("Tree .* rate (\d+(\.\d*){0,1}), tMRCA (\d+(\.\d*){0,1})")
         for line in resFile:
             m = p.match(line)
             if m:
-                sublistrate = [m.group(1),m.group(2)]
+                sublistrate = [m.group(1),m.group(3)]
+                print m.group(1)+"--|--"+m.group(3)+"\n"
                 substrate.append(sublistrate)
         return substrate
 

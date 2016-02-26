@@ -1,7 +1,12 @@
-{% include "lsd/header.html" %}
+{% extends "lsd/base_generic.html" %}
+
+{% block refresh %}
+<meta http-equiv="refresh" content="{{refresh}}; URL={% url 'lsd:check_run' %}?jid={{jid}}&times={{times}}"/>
+{% endblock %}
 
 <h1>Submit LSD Run</h1>
 
+{% block content %}
 <br/>Input Tree File: {{inputtree}}
 <br/>Dates? {{datesornot}}
 <br/>Inputdate: {{inputdate}}
@@ -16,5 +21,5 @@
 <br/>Subst rates: {{substrates}}
 <br/>Outgroup file: {{outgroups}}
 <br/>Job id : {{jid}}
+{% endblock %}
 
-{% include "lsd/footer.html" %}

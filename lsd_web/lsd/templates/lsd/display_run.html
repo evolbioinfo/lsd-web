@@ -1,0 +1,18 @@
+{% extends "lsd/base_generic.html" %}
+
+{% block content %}
+<h1>LSD Run Results</h1>
+
+Your Job Status is : {{status}}<br/>
+
+Trees are : <br/>
+
+{% for t in trees %}
+<div>
+  <pre>
+  {{t.result_newick}}
+  </pre>
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "lsd/base_generic.html" %}
+
+{% block refresh %}
+<meta http-equiv="refresh" content="{{refresh}};URL={% url 'lsd:check_run' %}?jid={{jid}}&times={{times}}"/>
+{% endblock %}
+
+{% block content %}
+<h1>Waiting LSD Run</h1>
+
+Your Job Status is : {{status}}<br/>
+
+This page will reload in {{wait}} seconds.
+
+{% endblock %}
