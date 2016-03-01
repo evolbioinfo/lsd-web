@@ -3,29 +3,47 @@
 {% block content %}
 <h1>LSD Run Results</h1>
 
-Your Job Status is : {{status}}<br/>
+<h2>Job Status</h2>
+{{status}}
 
-Trees are : <br/>
+<h2>Messages</h2>
+<h3>Output Messages</h3>
+<pre>
+{{output}}<br/>
+</pre>
+<h3>Error Messages</h3>
+<pre>
+{{error}}<br/>
+</pre>
 
-{% for t in trees %}
-<div>
-  <pre>
-  {{t.result_newick}}
-  </pre>
-</div>
-{% endfor %}
+<h2>Resulting Trees</h2>
+
+<!-- {% for t in trees %} -->
+<!-- <div> -->
+<!--   <pre> -->
+<!--   {{t.result_newick}} -->
+<!--   </pre> -->
+<!-- </div> -->
+<!-- {% endfor %} -->
+{% if not treeimages and not treedateimages %}
+No results to show
+{% else %}
 
 {% for image in treeimages %}
 <div>
-  <img src="data:image/png;base64,{{image}}"/>
+  <img src="data:image/svg+xml;base64,{{image}}"/>
 </div>
 {% endfor %}
 
 {% for image in treedateimages %}
 <div>
-  <img src="data:image/png;base64,{{image}}"/>
+  <a class="btn btn-info" href="{% url 'lsd:check_run' %}?jid={{jid}}&pdf={{forloop.counter0}}">pdf</a>
+</div>
+<div>
+  <img src="data:image/svg+xml;base64,{{image}}"/>
 </div>
 {% endfor %}
 
+{% endif %}
 
 {% endblock %}

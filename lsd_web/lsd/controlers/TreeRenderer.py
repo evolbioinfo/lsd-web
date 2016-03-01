@@ -4,6 +4,8 @@ import base64
 import os
 import shutil
 import tempfile
+from PIL import Image, ImageChops
+
 #from Bio import Phylo
 #from ete3 import Phyloxml
 #from Bio import Nexus
@@ -13,12 +15,15 @@ class TreeRenderer:
     """Render a tree from newick to String using ETE Toolkit"""
 
     @staticmethod
-    def renderNewick(newickString,widthPx):
+    def renderNewick(newickString,widthPx,pdf):
         t = Tree( newickString )
         # Directory where temptree 
         # image will be stored
         tempdir=tempfile.mkdtemp()
-        imageFile=os.path.join(tempdir, "image.png")
+        if pdf:
+            imageFile=os.path.join(tempdir, "image.svg")
+        else:
+            imageFile=os.path.join(tempdir, "image.pdf")
         ts = TreeStyle()
         ts.show_leaf_name = True
         ts.show_branch_length = True
@@ -27,33 +32,51 @@ class TreeRenderer:
         newick.set_float_format('%4.2f')
         t.render(imageFile, tree_style=ts, w=widthPx, units="px")
         with open(imageFile, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read())
+            if pdf:
+                encoded_string = image_file.read()
+            else:
+                encoded_string = base64.b64encode(image_file.read())
             return(encoded_string)
         shutil.rmtree(tempdir)
         return("")
 
     @staticmethod
-    def renderNexus(nexusString,widthPx):
-        newickString = re.sub("\[&date=(\d+(\.\d+){0,1})\](:\d*(\.\d+){0,1}){0,1}", r":\1", nexusString)
+    def renderNexus(nexusString,widthPx,pdf):
+        newickString = re.sub("\[&date=(\d+(\.\d+){0,1})\](:-{0,1}\d*(\.\d+){0,1}){0,1}", r":\1", nexusString)
         
         t = Tree( newickString )
         # Directory where temptree 
         # image will be stored
         tempdir=tempfile.mkdtemp()
-        imageFile=os.path.join(tempdir, "image.png")
+        if(pdf):
+            imageFile=os.path.join(tempdir, "image.pdf")
+        else:
+            imageFile=os.path.join(tempdir, "image.svg")
         ts = TreeStyle()
         ts.show_leaf_name = True
         #ts.show_branch_length = True
         #ts.show_branch_support = True
         #ts.mode = "c"
+        #ts.mode = "c"
+        #ts.arc_start = -180 # 0 degrees = 3 o'clock
+        #ts.arc_span = 180
+        #ts.legend=False
+        ts.show_scale=False
 
         # On ajoute les dates aux noeuds
         for n in t.traverse():
-            n.add_face(TextFace(str(n.dist)),column=0)
+            date=n.dist
+            month=n.dist-(int)(n.dist)
+            month=(int)(month*12)+1
+            n.add_face(TextFace(str(month).zfill(2)+"/"+str((int)(date))),column=0)
 
         t.render(imageFile, tree_style=ts, w=widthPx, units="px")
+        #TreeRenderer.cropImage(imageFile)
         with open(imageFile, "rb") as image_file:
-            encoded_string = base64.b64encode(image_file.read())
+            if pdf:
+                encoded_string = image_file.read()
+            else:
+                encoded_string = base64.b64encode(image_file.read())
             return(encoded_string)
         shutil.rmtree(tempdir)
         return("")
@@ -61,13 +84,14 @@ class TreeRenderer:
     @staticmethod
     def renderTree(tree,widthPx):
         tempdir=tempfile.mkdtemp()
-        imageFile=os.path.join(tempdir, "image.png")
+        imageFile=os.path.join(tempdir, "image.svg")
         ts = TreeStyle()
         ts.show_leaf_name = True
         ts.show_branch_length = True
         #ts.show_branch_support = True
                 
         tree.render(imageFile, tree_style=ts, w=widthPx, units="px")
+        #TreeRenderer.cropImage(imageFile)
         with open(imageFile, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
             return(encoded_string)
@@ -99,3 +123,14 @@ class TreeRenderer:
 
     #     shutil.rmtree(tempdir)
     #     return(trees)
+
+    @staticmethod
+    def cropImage(imagefile):
+        image=Image.open(imagefile)
+        image.load()
+        bg = Image.new(image.mode, image.size, image.getpixel((0,0)))
+        diff = ImageChops.difference(image, bg)
+        diff = ImageChops.add(diff, diff, 2.0, -100)
+        bbox = diff.getbbox()
+        cropped=image.crop(bbox)
+        cropped.save(imagefile)
