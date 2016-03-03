@@ -4,7 +4,7 @@
 <html>
   <head>
     <title>{% block title%}LSD Web application{% endblock %}</title>
-    <!-- <link href="{% static "lsd/style/style.css" %}" rel="stylesheet" type="text/css"> -->
+    <link href="{% static "lsd/style.css" %}" rel="stylesheet" type="text/css">
     <link href='https://fonts.googleapis.com/css?family=Macondo' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'>
     <link href='https://fonts.googleapis.com/css?family=Dosis' rel='stylesheet' type='text/css'>
@@ -17,10 +17,31 @@
     {% endblock %}
   </head>
   <body>
-    
+    <div id="header">
+      LSD
+    </div>
+    <div id="leftpanel">
+      {% if user.is_authenticated %}
+      <p>Welcome, {{ user.first_name }} {{ user.last_name }}</p>
+      <div class="list-group">
+	<a class="list-group-item" href="{% url 'lsd:index' %}">New Run</a>
+      </div>
+      Runs:<br/>
+      <div class="list-group" id="runlist">
+	{% for run in user.lsdrun_set.all %}
+	<a class="list-group-item" href="{% url 'lsd:check_run' %}?jid={{run.run_name}}">{{run.run_date}}<span class="badge">{{run.run_status}}</span></a>
+	{% endfor %}
+      </div>
+      {% endif %}
+    </div>
     <div id="content">
       {% block content %}{% endblock %}
     </div>
-
+    <div id="rightpanel">
+    </div>
+    <div id="footer">
+      <hr/>
+      LSD - 2016
+    </div>
   </body>
 </html>

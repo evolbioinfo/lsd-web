@@ -3,9 +3,11 @@ from lsd.tasks import submitLSD
 from lsd.models import LSDRun, RunTrees, RunTaxonDates, RunOutGroups
 from django.contrib.auth import views
 import base64
-
 from lsd.controlers.LSDRunParser import LSDRunParser
 from lsd.controlers.TreeRenderer import TreeRenderer
+from lsd.controlers.UserManager import UserManager
+from lsd_forms import RegistrationForm
+from django.shortcuts import redirect
 
 # Create your views here.
 from django.http import HttpResponse
@@ -19,6 +21,9 @@ def index(request):
 def submit_run(request):
     r = LSDRunParser.parse(request)
     r.save()
+    if request.user.is_authenticated():
+        r.run_user=request.user
+        r.save()
     jid=submitLSD.delay(r.id)
 
     context = {
@@ -28,6 +33,27 @@ def submit_run(request):
         'refresh': 2,
     }
     return  render(request, 'lsd/wait_run.html', context)
+
+def create_account(request):
+    if request.user.is_authenticated():
+        return redirect('/')
+    form = RegistrationForm(request.POST)
+    if request.method == 'POST':
+        form = RegistrationForm(request.POST)
+        if form.is_valid():
+            datas={}
+            datas['username']=form.cleaned_data['username']
+            datas['email']=form.cleaned_data['email']
+            datas['password1']=form.cleaned_data['password1']
+            datas['firstname']=form.cleaned_data['firstname']
+            datas['lastname']=form.cleaned_data['lastname']
+            form.save(datas)
+            request.session['registered']=True #For display purposes
+            return redirect('/')
+        else:
+            registration_form = form #Display form with error messages (incorrect fields, etc)
+            
+    return render(request, 'lsd/create_account.html', locals())
 
 def check_run(request):
     jid   = request.GET['jid'];

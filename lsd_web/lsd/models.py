@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from django.db import models
 from datetime import datetime
+from django.contrib.auth.models import User
 
 # Create your models here.
 class LSDRun(models.Model):
@@ -30,6 +31,7 @@ class LSDRun(models.Model):
     run_err_message      = models.CharField(max_length=1000,default="")
     run_out_message      = models.CharField(max_length=1000,default="")
     run_outpath          = models.CharField(max_length=1000,default="")
+    run_user             = models.ForeignKey(User, null=True, blank=True, default = None)
 
     def __str__(self):
         return self.run_name 
