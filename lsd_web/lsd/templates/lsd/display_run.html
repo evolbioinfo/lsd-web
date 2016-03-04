@@ -3,31 +3,71 @@
 {% block content %}
 <h1>LSD Run Results</h1>
 
-<h2>Job Status</h2>
-{{status}}
+<div class="container">
+  <div class="row">
+    <div class="col-sm-1 col-title">
+      <p>Status</p>
+    </div>
+    <div class="col-sm-11">
+      <p><span class="label label-{{statusshort}}">{{status}}</span></p>
+    </div>
+  </div>
 
-<h2>Messages</h2>
-<h3>Output Messages</h3>
-<pre>
-{{output}}<br/>
-</pre>
-<h3>Error Messages</h3>
-<pre>
-{{error}}<br/>
-</pre>
+  <div class="row">
+    <div class="col-sm-1 col-title">
+      <p>Messages</p>
+    </div>
+    <div class="col-sm-11">
+      <ul class="nav nav-tabs">
+	<li class="active"><a href="#output-messages" aria-controls="output" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-console"></span>Output</a></li>
+	<li><a href="#error-messages" aria-controls="error" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-console"></span> Error</a></li>
+      </ul>
+      <div class="tab-content">
+	<div role="tabpanel" class="tab-pane active" id="output-messages">
+	  <pre class="terminal-messages">
+	    {{output}}
+	  </pre>
+	</div>
+	<div role="tabpanel" class="tab-pane" id="error-messages">
+	  <pre class="terminal-messages">
+	    {{error}}
+	  </pre>
+	</div>
+      </div>
+    </div>
+  </div>
 
-<h2>Resulting Trees</h2>
+  <div class="row">
+    <div class="col-sm-1 col-title">
+      <p>Export</p>
+    </div>
+    <div class="col-sm-11">
+      {% for image in treedateimages %}
+      <div>
+	<a class="label label-info" href="{% url 'lsd:check_run' %}?jid={{jid}}&pdf={{forloop.counter0}}">pdf</a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
 
-<!-- {% for t in trees %} -->
-<!-- <div> -->
-<!--   <pre> -->
-<!--   {{t.result_newick}} -->
-<!--   </pre> -->
-<!-- </div> -->
-<!-- {% endfor %} -->
-{% if not treeimages and not treedateimages %}
-No results to show
-{% else %}
+
+  <div class="row">
+    <div class="col-sm-1 col-title">
+      <p>Tree</p>
+    </div>
+    <div class="col-sm-11">
+      {% if not treeimages and not treedateimages %}
+      No results to show
+      {% else %}
+      {% for image in treedateimages %}
+      <div class="resulttree">
+	<img src="data:image/svg+xml;base64,{{image}}"/>
+      </div>
+      {% endfor %}
+      {% endif %}
+    </div>
+  </div>
+</div>
 
 {% for image in treeimages %}
 <div>
@@ -35,15 +75,5 @@ No results to show
 </div>
 {% endfor %}
 
-{% for image in treedateimages %}
-<div>
-  <a class="btn btn-info" href="{% url 'lsd:check_run' %}?jid={{jid}}&pdf={{forloop.counter0}}">pdf</a>
-</div>
-<div class="resulttree">
-  <img src="data:image/svg+xml;base64,{{image}}"/>
-</div>
-{% endfor %}
-
-{% endif %}
 
 {% endblock %}

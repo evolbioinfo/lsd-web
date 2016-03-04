@@ -28,6 +28,7 @@ def submit_run(request):
 
     context = {
         'status' : "Pending",
+        'statusshort': r.run_status,
         'jid'    : jid,
         'times'  : 1,
         'refresh': 2,
@@ -37,7 +38,7 @@ def submit_run(request):
 def create_account(request):
     if request.user.is_authenticated():
         return redirect('/')
-    form = RegistrationForm(request.POST)
+    form = RegistrationForm()
     if request.method == 'POST':
         form = RegistrationForm(request.POST)
         if form.is_valid():
@@ -66,6 +67,7 @@ def check_run(request):
     if r.run_status == r.RUNNING:
         context = {
             'status' : "Running",
+            'statusshort': r.run_status,
             'jid'    : jid,
             'times'  : str(times+1),
             'refresh': str(2^times)
@@ -75,6 +77,7 @@ def check_run(request):
     if r.run_status == r.PENDING :
         context = {
             'status' : "Pending",
+            'statusshort': r.run_status,
             'jid'    : jid,
             'times'  : times+1,
             'refresh': 2^times
@@ -101,6 +104,7 @@ def check_run(request):
 
         context = {
             'status'     : "Finished",
+            'statusshort': r.run_status,
             'lsdrun'     : r,
             'trees'      : r.resulttree_set.all(),
             'treeimages' : treeData,

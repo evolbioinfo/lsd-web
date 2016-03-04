@@ -1,4 +1,4 @@
-from ete3 import Tree, TreeStyle, TextFace
+from ete3 import Tree, TreeStyle, TextFace, faces, AttrFace
 from ete3.parser import newick
 import base64
 import os
@@ -53,7 +53,8 @@ class TreeRenderer:
         else:
             imageFile=os.path.join(tempdir, "image.svg")
         ts = TreeStyle()
-        ts.show_leaf_name = True
+        ts.show_leaf_name = False
+        ts.layout_fn = TreeRenderer.layout
         #ts.show_branch_length = True
         #ts.show_branch_support = True
         #ts.mode = "c"
@@ -68,8 +69,8 @@ class TreeRenderer:
             date=n.dist
             month=n.dist-(int)(n.dist)
             month=(int)(month*12)+1
-            n.add_face(TextFace(str(month).zfill(2)+"/"+str((int)(date))),column=0)
-
+            n.add_face(TextFace(str(month).zfill(2)+"/"+str((int)(date)),ftype='Arial', fsize=5, fgcolor='black', fstyle='italic', tight_text=True),column=1)
+            
         t.render(imageFile, tree_style=ts, w=widthPx, units="px")
         #TreeRenderer.cropImage(imageFile)
         with open(imageFile, "rb") as image_file:
@@ -134,3 +135,9 @@ class TreeRenderer:
         bbox = diff.getbbox()
         cropped=image.crop(bbox)
         cropped.save(imagefile)
+
+    @staticmethod
+    def layout(node):
+        # If node is a leaf, add the nodes name and a its scientific name
+        if node.is_leaf():
+            faces.add_face_to_node(AttrFace("name", ftype='Arial', fsize=6, fgcolor='black'),node, column=1)
