@@ -8,7 +8,7 @@ class LSDRunner:
     """A runner to launch LSD program"""
     lsdrun = None
     lsdpath="/home/flemoine/Documents/lsd_interface/lsd/lsd-0.2/bin/lsd.exe"
-    
+    #lsdpath="/Users/flemoine/Documents/Projects/lsd-web/lsd/lsd-0.2/src/lsd"
     def __init__(self,lsdrun):
         self.lsdrun = lsdrun
 
