@@ -6,10 +6,10 @@ import shutil
 import tempfile
 from PIL import Image, ImageChops
 
-#from Bio import Phylo
-#from ete3 import Phyloxml
-#from Bio import Nexus
-#from Bio.Phylo import PhyloXMLIO
+from Bio import Phylo
+from Bio import Nexus
+from TreeImage import TreeImage
+
 import re
 class TreeRenderer:
     """Render a tree from newick to String using ETE Toolkit"""
@@ -83,6 +83,20 @@ class TreeRenderer:
         return("")
 
     @staticmethod
+    def renderNexus_own(nexusString,widthPx,pdf):
+        treestring = "#NEXUS\nBegin trees;\ntree 1 = "+nexusString+"\nEnd;\n"
+        nexusIO = Nexus.Nexus.Nexus(treestring)
+        tempdir=tempfile.mkdtemp()
+        image_file=os.path.join(tempdir, "image.png")
+        for t in nexusIO.trees:
+            TreeImage.render_png(t,widthPx,0,image_file)
+        with open(image_file, "rb") as image:
+            encoded_string = base64.b64encode(image.read())
+            return(encoded_string)
+        shutil.rmtree(tempdir)
+        return("")
+
+    @staticmethod
     def renderTree(tree,widthPx):
         tempdir=tempfile.mkdtemp()
         imageFile=os.path.join(tempdir, "image.svg")
@@ -98,6 +112,7 @@ class TreeRenderer:
             return(encoded_string)
         shutil.rmtree(tempdir)
         return("")
+
 
     # @staticmethod
     # def getTreesFromNexus(nexusString):

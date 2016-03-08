@@ -97,8 +97,9 @@ def check_run(request):
             return res
 
         for t in r.resulttree_set.all():
-            imagehex64=TreeRenderer.renderNewick(t.result_newick,400,False)
-            imagehex64_2=TreeRenderer.renderNexus(t.result_nexus, 1200,False)
+            #imagehex64=TreeRenderer.renderNewick(t.result_newick,400,False)
+            imagehex64_2=TreeRenderer.renderNexus_own(t.result_nexus, 1000,False)
+            
             #treeData.append(imagehex64)
             treeDateData.append(imagehex64_2)
 

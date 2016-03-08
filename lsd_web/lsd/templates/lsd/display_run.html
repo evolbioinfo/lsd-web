@@ -61,19 +61,13 @@
       {% else %}
       {% for image in treedateimages %}
       <div class="resulttree">
-	<img src="data:image/svg+xml;base64,{{image}}"/>
+	<img src="data:image/png;base64,{{image}}"/>
       </div>
       {% endfor %}
       {% endif %}
     </div>
   </div>
 </div>
-
-{% for image in treeimages %}
-<div>
-  <img src="data:image/svg+xml;base64,{{image}}"/>
-</div>
-{% endfor %}
 
 
 {% endblock %}
