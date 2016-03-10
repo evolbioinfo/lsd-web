@@ -50,7 +50,6 @@
     </div>
   </div>
 
-
   <div class="row">
     <div class="col-sm-1 col-title">
       <p>Tree</p>
@@ -62,6 +61,7 @@
       {% for image in treedateimages %}
       <div class="resulttree">
 	<img src="data:image/png;base64,{{image}}"/>
+	<!-- <canvas id="tree_canvas_{{forloop.counter0}}" class="tree_canvas" data-index="{{forloop.counter0}}" resize></canvas> -->
       </div>
       {% endfor %}
       {% endif %}

@@ -8,6 +8,9 @@ from lsd.controlers.TreeRenderer import TreeRenderer
 from lsd.controlers.UserManager import UserManager
 from lsd_forms import RegistrationForm
 from django.shortcuts import redirect
+from lsd.controlers.TreeJSON import TreeJSON
+from Bio import Phylo
+from Bio import Nexus
 
 # Create your views here.
 from django.http import HttpResponse
@@ -53,7 +56,6 @@ def create_account(request):
             return redirect('/')
         else:
             registration_form = form #Display form with error messages (incorrect fields, etc)
-            
     return render(request, 'lsd/create_account.html', locals())
 
 def check_run(request):
@@ -94,6 +96,18 @@ def check_run(request):
             res = HttpResponse(imagehex64_2)
             res['Content-Type'] = 'application/pdf'
             res['Content-Disposition'] = 'attachment; filename=tree.pdf'
+            return res
+
+        if 'json' in request.GET and (int)(request.GET['json'])<len(r.resulttree_set.all()):
+            print "COUCOU 2"
+            t = r.resulttree_set.all()[(int)(request.GET['json'])]
+            treestring = "#NEXUS\nBegin trees;\ntree 1 = "+t.result_nexus+"\nEnd;\n"
+            nexusIO = Nexus.Nexus.Nexus(treestring)
+            tj = TreeJSON(nexusIO.trees[0])
+            tree_json=tj.to_json(tj.to_serializable(nexusIO.trees[0].root))
+            res = HttpResponse(tree_json)
+            res['Content-Type'] = 'application/json'
+            # res['Content-Disposition'] = 'attachment; filename=tree.json'
             return res
 
         for t in r.resulttree_set.all():

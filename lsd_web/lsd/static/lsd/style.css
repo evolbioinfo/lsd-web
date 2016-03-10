@@ -1,6 +1,8 @@
 body{
     width:100%;
+    /* font-family: Raleway; */
 }
+
 div#footer{
     width:100%;
     text-align:center;
@@ -76,4 +78,7 @@ pre.terminal-messages{
   float:right;
 }
 
-
+.tree_canvas{
+    border:1px solid;
+    width:100%;
+}
