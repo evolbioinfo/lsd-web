@@ -37,9 +37,9 @@ function clear_canvas(canvas){
 
 function draw_tree(canvas,tree){
     // Create an empty project and a view for the canvas:
-    paper.setup(canvas);
-    // Create a Paper.js Path to draw a line into it:
-    var tool = new Tool();
+    var ctx = canvas.getContext("2d");
+    canvas.width  = $(canvas).width();
+    canvas.height = height;
     var level=0
     var border=40
     var min_y=border
@@ -48,20 +48,19 @@ function draw_tree(canvas,tree){
     var max_y=curheight-border
     var max_num_disp_years=25
     var root = tree
-    var point_radius=3
+    var point_radius=2
     max_date = tree_max_date(tree)
     min_date = tree_min_date(tree)
-    console.log(min_date+" "+max_date)
+    //console.log(min_date+" "+max_date)
     // y coords
     // console.log(JSON.stringify(tree))
     var total_terminals=count_terminals(tree)
-    console.log(total_terminals)
+    //console.log(total_terminals)
     var y_dict={}
     tree_y_coords(y_dict,root,curheight,border,0,total_terminals)
-    console.log(JSON.stringify(y_dict))
-    draw_scale(min_date,max_date,width,curheight,border,max_num_disp_years)
-    coordinates(root.id,root,y_dict,min_date,max_date,width,0,0,border,point_radius)
-    paper.view.draw();
+    //console.log(JSON.stringify(y_dict))
+    draw_scale(ctx,min_date,max_date,width,curheight,border,max_num_disp_years)
+    coordinates(ctx,root.id,root,y_dict,min_date,max_date,width,0,0,border,point_radius)
 }
 
 function count_terminals(node){
@@ -120,28 +119,36 @@ function tree_y_coords(y_dict, tree_node, height, border,num_terminal,total_term
     return num_terminal
 }
 
-function coordinates(root_id,node,y_dict,min_date,max_date,width,prev_x,prev_y,border,point_radius){
+function coordinates(ctx, root_id,node,y_dict,min_date,max_date,width,prev_x,prev_y,border,point_radius){
     var middle=y_dict[node.id]
     //On ajoute les lignes verticales precedentes si non root
 
     // On prend la date et on calcul la position x
     var x_coord= (node.date_n-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
-
+    
     // On affiche le noeud
-    var myCircle = new Path.Circle(new Point(x_coord, middle), point_radius);
-    myCircle.fillColor = 'black';        
+    ctx.beginPath();
+    ctx.arc(x_coord,middle,point_radius,0,2*Math.PI);
+    ctx.fillStyle = "#000000";        
+    ctx.fill();
+    ctx.stroke();
 
     //# On affiche la ligne horizontale
-    var path = new Path();
+    ctx.beginPath();
+    ctx.moveTo(prev_x,prev_y);
     if(node.id != root_id){
-	path.add(new Point(prev_x,prev_y));
+	ctx.moveTo(prev_x,prev_y);
+	//ctx.lineTo(prev_x,middle);
+	ctx.lineTo(x_coord, middle);
+    }else{
+	//ctx.moveTo(prev_x,middle);
     }
-    path.add(new Point(prev_x,middle));
-    path.add(new Point(x_coord, middle));
-    path.strokeColor = 'black';
-    path.strokeCap='round';
-    path.strokeWidth=2;
-    path.strokeJoin = 'round';
+    //ctx.lineTo(x_coord, middle);
+    ctx.strokeStyle= '#000000';
+    ctx.lineWidth=2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin= 'round';
+    ctx.stroke();
 
     // On affiche la date du noeud
     var year  = Math.floor(node.date_n)
@@ -149,10 +156,20 @@ function coordinates(root_id,node,y_dict,min_date,max_date,width,prev_x,prev_y,b
     var month = Math.floor(month*12)+1
     var date  = year+"/"+pad(month,2)
     
-    var text = new PointText(new Point(x_coord+2,middle+2));
-    text.justification = 'left';
-    text.fillColor = 'black';
-    text.content = date;
+    ctx.beginPath();
+    ctx.font = "10px Arial";
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = "left";
+    ctx.fillText(date,x_coord-ctx.measureText(date).width-point_radius,middle-2-point_radius);
+    
+    // On affiche le nom du noeud
+    if(node.suc.length == 0){
+	ctx.beginPath();
+	ctx.font = "12px Arial";
+	ctx.fillStyle = '#000000';
+	ctx.textAlign = "left";
+	ctx.fillText(node.tax,x_coord+point_radius+2,middle+2);
+    }
 
     // tw,th = image_draw.textsize(date, font=fnt_small)
     // image_draw.text([x_coord-tw-point_radius,middle-th], date, (0,0,0,255), font=fnt_small)
@@ -166,7 +183,7 @@ function coordinates(root_id,node,y_dict,min_date,max_date,width,prev_x,prev_y,b
 
     // On passe aux suivants
     for(var n=0;n<node.suc.length;n++){
-	coordinates(root_id,node.suc[n],y_dict,min_date,max_date,width,x_coord,middle, border,point_radius)
+	coordinates(ctx,root_id,node.suc[n],y_dict,min_date,max_date,width,x_coord,middle, border,point_radius)
     }
 }
 
@@ -176,38 +193,43 @@ function pad(n, width, z) {
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
-function draw_scale(min_date,max_date,width,height,border,max_num_disp_years){
+function draw_scale(ctx, min_date,max_date,width,height,border,max_num_disp_years){
     var max_year = Math.ceil(max_date)
     var min_year = Math.floor(min_date)
     var mod= Math.ceil((max_year-min_year)*1.0/max_num_disp_years)
     for(var year=min_year; year<=max_year; year++){
         if (year%mod==0){
-            //print "Year: "+str(year)
             var x_coord= (year-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
-	    var path = new Path();
-	    path.add(new Point(x_coord,0));
-	    path.add(new Point(x_coord,height));
-	    path.strokeColor = 'grey';
-	    path.strokeCap='round';
-	    path.strokeWidth=1;
-	    path.strokeJoin = 'round';
-	    path.dashArray = [4, 4];
-	    var text = new PointText(new Point(x_coord,10));
-	    text.justification = 'left';
-	    text.fillColor = 'grey';
-	    text.content = year;
+	    // We draw the scale line
+	    ctx.beginPath();
+	    ctx.setLineDash([4, 4]);
+	    ctx.moveTo(x_coord,0);
+	    ctx.lineTo(x_coord,height);
+	    ctx.strokeStyle= 'grey';
+	    ctx.lineWidth=1;
+	    ctx.lineCap = 'round';
+	    ctx.lineJoin= 'round';
+	    ctx.stroke();
+	    ctx.setLineDash([]);
+
+	    // We write the legend
+	    ctx.beginPath();
+	    ctx.font = "10px Arial";
+	    ctx.fillStyle = 'grey';
+	    ctx.textAlign = "left";
+	    ctx.fillText(year,x_coord,10);
 	}
     }
 }
 
 function init_canvas(){
-    paper.install(window);
+    // paper.install(window);
 
-    $('#zoomslider').change(function(){
+    $('#zoomslider').on("input change",function(){
 	curzoom = $(this).val();
 	$('.tree_canvas').each(function(index,item){
 	    clear_canvas(item);
-	    console.log("Zoom: "+curzoom);
+	    //console.log("Zoom: "+curzoom);
 	    zoom = curzoom;
 	    $("#valuezoom").html(zoom);
 	    if(trees.length >= index){
@@ -220,7 +242,7 @@ function init_canvas(){
 	$(item).mousedown(function(e){
 	    still_down = true;
 	    prevy=e.pageY;
-	    console.log("Down at: "+e.pageY);
+	    //console.log("Down at: "+e.pageY);
 	});
     });
 
@@ -233,7 +255,7 @@ function init_canvas(){
 		if(offset>0){
 		    offset=0
 		}
-		console.log("Up at: "+e.pageY," ==> Offset: "+offset);
+		//console.log("Up at: "+e.pageY," ==> Offset: "+offset);
 		draw_tree(item,trees[index]);
 	    }
 	});
@@ -247,7 +269,7 @@ function init_canvas(){
 	    if(offset>0){
 		offset=0
 	    }
-	    console.log("Up at: "+e.pageY," ==> Offset: "+offset);
+	    //console.log("Up at: "+e.pageY," ==> Offset: "+offset);
 	    draw_tree(item,trees[index]);
 	});
     });
