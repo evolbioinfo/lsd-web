@@ -22,7 +22,7 @@ class TreeImage:
         point_radius=3
         max_date = TreeImage.get_max_date(tree)
         min_date = TreeImage.get_min_date(tree)
-        print str(min_date)+" "+str(max_date)
+        #print str(min_date)+" "+str(max_date)
         image = Image.new('RGBA', (width,height), (255,255,255,255))
         fnt_large = ImageFont.truetype('Pillow/Tests/fonts/DejaVuSans.ttf', 14)
         fnt_small = ImageFont.truetype('Pillow/Tests/fonts/DejaVuSans.ttf', 10)
@@ -60,7 +60,7 @@ class TreeImage:
 
         # On affiche le nom du noeud
         if(len(node.succ)==0):
-            print(node.data.taxon)
+            #print(node.data.taxon)
             tw,th = image_draw.textsize(node.data.taxon, font=fnt_large)
             image_draw.text([x_coord+point_radius*2,middle-th/2], node.data.taxon, (0,0,0,255), font=fnt_large)
 
@@ -81,7 +81,7 @@ class TreeImage:
         mod=int(math.ceil((max_year-min_year)*1.0/max_num_disp_years))
         for year in range(min_year,max_year+1):
             if  year%mod==0:
-                print "Year: "+str(year)
+                #print "Year: "+str(year)
                 x_coord= (year-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
                 draw_image.line([(x_coord,0),(x_coord,height)],(100,100,100,255),1);
                 draw_image.text([x_coord,0], str(year), (100,100,100,255), font=f)
@@ -117,23 +117,23 @@ class TreeImage:
 
     @staticmethod
     def y_coords(y_dict,tree,node,height,border,num_terminal):
-        print "Current term: "+str(num_terminal)
-        print "node: "+str(node.get_id())
-        print "Start: "+str(y_dict)
+        #print "Current term: "+str(num_terminal)
+        #print "node: "+str(node.get_id())
+        #print "Start: "+str(y_dict)
         if(len(node.succ)>0):
             meany=0
             for n in node.succ:
-                print "succ: "+str(n)
+                #print "succ: "+str(n)
                 num_terminal=TreeImage.y_coords(y_dict,tree,tree.node(n),height,border,num_terminal)
-                print "Try: "+str(n)
+                #print "Try: "+str(n)
                 meany+=y_dict[n]
             meany=meany*1.0/len(node.succ)
             y_dict[node.get_id()] = meany
         else:
             y_dict[node.get_id()]=num_terminal*((height-2*border)*1.0/(tree.count_terminals()-1))+border
             num_terminal+=1
-        print "End: "+str(y_dict)
-        print "num term: "+str(num_terminal)
+        #print "End: "+str(y_dict)
+        #print "num term: "+str(num_terminal)
         return num_terminal
 
     @staticmethod

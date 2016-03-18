@@ -61,7 +61,12 @@
       {% for image in treedateimages %}
       <div class="resulttree">
 	<img src="data:image/png;base64,{{image}}"/>
-	<!-- <canvas id="tree_canvas_{{forloop.counter0}}" class="tree_canvas" data-index="{{forloop.counter0}}" resize></canvas> -->
+	<div class="canvaswrapper">
+	  <canvas id="tree_canvas_{{forloop.counter0}}" class="tree_canvas" data-index="{{forloop.counter0}}" resize></canvas>
+	  <input id="zoomslider" type="range" min="1" max="20" step="0.5" value="1" orient="vertical"/>
+	</div>
+	<div id="valuezoom">
+	</div>
       </div>
       {% endfor %}
       {% endif %}

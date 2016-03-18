@@ -82,3 +82,22 @@ pre.terminal-messages{
     border:1px solid;
     width:100%;
 }
+
+.canvaswrapper {
+    position:relative;
+}
+
+/* .canvaswrapper > canvas, */
+.canvaswrapper > input {
+    position: absolute;
+    left:0;
+    top:0;
+    transform: rotate(0deg);
+    width:5px;
+    height:200px;
+}
+
+.canvaswrapper > input {
+    /* right:10px;    /\* places the slider *\/ */
+    /* top:10px; */
+}

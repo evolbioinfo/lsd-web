@@ -1,4 +1,10 @@
-
+trees = []
+height=500
+width=1000
+zoom=1
+prevy=0
+offset=0
+still_down = false
 
 function init(){
     $('input[data-toggle=radio-collapse]').each(function(index, item) {
@@ -24,6 +30,10 @@ function init(){
     $('.label-E').addClass('label-danger');
 }
 
+function clear_canvas(canvas){
+    var ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, width, height*zoom);
+}
 
 function draw_tree(canvas,tree){
     // Create an empty project and a view for the canvas:
@@ -33,9 +43,9 @@ function draw_tree(canvas,tree){
     var level=0
     var border=40
     var min_y=border
-    var height=500
-    var width=1000
-    var max_y=height-border
+    var curheight=height * zoom
+    var curwidth= width
+    var max_y=curheight-border
     var max_num_disp_years=25
     var root = tree
     var point_radius=3
@@ -47,9 +57,9 @@ function draw_tree(canvas,tree){
     var total_terminals=count_terminals(tree)
     console.log(total_terminals)
     var y_dict={}
-    tree_y_coords(y_dict,root,height,border,0,total_terminals)
+    tree_y_coords(y_dict,root,curheight,border,0,total_terminals)
     console.log(JSON.stringify(y_dict))
-    draw_scale(min_date,max_date,width,height,border,max_num_disp_years)
+    draw_scale(min_date,max_date,width,curheight,border,max_num_disp_years)
     coordinates(root.id,root,y_dict,min_date,max_date,width,0,0,border,point_radius)
     paper.view.draw();
 }
@@ -94,10 +104,9 @@ function tree_max_date(node){
 
 }
 
-
-function tree_y_coords(y_dict, tree_node, height, border,num_terminal,total_terminals){
+function tree_y_coords(y_dict, tree_node, height, border,num_terminal,total_terminals,curoffset){
     if(!tree_node.suc || tree_node.suc.length==0){
-        y_dict[tree_node.id]=num_terminal*((height-2*border)*1.0/(total_terminals-1))+border
+        y_dict[tree_node.id]=num_terminal*((height-2*border)*1.0/(total_terminals-1))+border+offset
         num_terminal+=1
     } else{
         var meany=0
@@ -193,6 +202,57 @@ function draw_scale(min_date,max_date,width,height,border,max_num_disp_years){
 
 function init_canvas(){
     paper.install(window);
+
+    $('#zoomslider').change(function(){
+	curzoom = $(this).val();
+	$('.tree_canvas').each(function(index,item){
+	    clear_canvas(item);
+	    console.log("Zoom: "+curzoom);
+	    zoom = curzoom;
+	    $("#valuezoom").html(zoom);
+	    if(trees.length >= index){
+      		draw_tree(item,trees[index]);
+	    }
+	});
+    });
+
+    $('.tree_canvas').each(function(index,item){
+	$(item).mousedown(function(e){
+	    still_down = true;
+	    prevy=e.pageY;
+	    console.log("Down at: "+e.pageY);
+	});
+    });
+
+
+    $('.tree_canvas').each(function(index,item){
+	$(item).mousemove(function(e){
+	    if(still_down){
+		offset-=(prevy-e.pageY);
+		prevy=e.pageY;
+		if(offset>0){
+		    offset=0
+		}
+		console.log("Up at: "+e.pageY," ==> Offset: "+offset);
+		draw_tree(item,trees[index]);
+	    }
+	});
+    });
+
+
+    $('.tree_canvas').each(function(index,item){
+	$(item).mouseup(function(e){
+	    still_down=false;
+	    offset-=(prevy-e.pageY);
+	    if(offset>0){
+		offset=0
+	    }
+	    console.log("Up at: "+e.pageY," ==> Offset: "+offset);
+	    draw_tree(item,trees[index]);
+	});
+    });
+
+
     window.onload = function() {
 	// Get a reference to the canvas object
 	$('.tree_canvas').each(function(index,item){
@@ -204,13 +264,22 @@ function init_canvas(){
 		data: 'json='+tree_idx,
 		dataType: 'json',
 		success: function(code_json,status){
-		    draw_tree(item,code_json)
+		    trees[index] = code_json
+		    draw_tree(item,trees[index])
 		}
 	    });
 	});
     }
 }
 
+// get mouse pos relative to canvas (yours is fine, this is just different)
+function getMousePos(canvas, evt) {
+    var rect = canvas.getBoundingClientRect();
+    return {
+        x: evt.clientX - rect.left,
+        y: evt.clientY - rect.top
+    };
+}
 $(document).ready(function(){
     init();
     init_canvas();
