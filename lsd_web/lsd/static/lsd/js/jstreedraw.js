@@ -194,13 +194,15 @@ function draw_scale(ctx, min_date,max_date,width,height,border,max_num_disp_year
 
 function init_canvas(){
     $('.canvaswrapper').each(function(index,item){
-	
-	var height=500
-	var width=1000
-	var zoom=1
-	var prevy=0
-	var offset=0
-	var still_down = false
+	var height=500;
+	var width=1000;
+	var zoom=1;
+	var prevy=0;
+	var offset=0;
+	var y_speed = 0;
+	var last_time = null;
+	var still_down = false;
+	var animation = null;
 
 	var canvas = $(item).find("canvas").get(0);
 	$(item).append("<input id=\"zoomslider_"+index+"\" type=\"range\" min=\"1\" max=\"20\" step=\"0.5\" value=\"1\" orient=\"vertical\"/>");
@@ -221,12 +223,20 @@ function init_canvas(){
 	$(canvas).mousedown(function(e){
 	    still_down = true;
 	    prevy=e.pageY;
-	    //console.log("Down at: "+e.pageY);
+	    last_time = Date.now();
+	    if(animation != null){
+		clearInterval(animation);
+		animation = null;
+	    }
 	});
 
 	$(canvas).mousemove(function(e){
 	    if(still_down){
 		offset-=(prevy-e.pageY);
+		if(last_time != null){
+		    y_speed = (prevy-e.pageY) / ((Date.now() - last_time));
+		}
+		last_time = Date.now();
 		prevy=e.pageY;
 		if(offset>0){
 		    offset=0;
@@ -235,19 +245,34 @@ function init_canvas(){
 		    offset = -(height)*zoom+$(canvas).height();
 		}
 		//console.log("Up at: "+e.pageY," ==> Offset: "+offset);
+		console.log("Y Speed : "+y_speed);
 		draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
 	    }
 	});
 
-	$(canvas).mouseout(function(e){
-	    still_down=false;
-	});
-
-
-	$(canvas).mouseup(function(e){
-	    still_down=false;
-	    //console.log("Up at: "+e.pageY," ==> Offset: "+offset);
-	    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
+	$(canvas).on("mouseout mouseup",function(e){
+	    if(animation === null && still_down){
+		still_down=false;
+		animation = setInterval(function(){
+		    offset-=y_speed*10
+		    if(offset>0){
+			offset=0;
+			y_speed = 0;
+		    }
+		    if(offset<-((height)*zoom-$(canvas).height())){
+			offset = -(height)*zoom+$(canvas).height();
+			y_speed = 0;
+		    }
+		    draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
+		    console.log("Animation: "+offset+ " Speed : "+y_speed);
+		    y_speed /= 1.1;
+		    if(Math.abs(y_speed) < 0.5){
+			console.log("stop animation");
+			clearInterval(animation);
+			animation = null;
+		    }
+		},10);
+	    }
 	});
 
 	if(canvas.hasAttribute('data-url')){
