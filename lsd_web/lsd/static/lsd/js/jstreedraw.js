@@ -1,5 +1,80 @@
 var trees = []
 
+function parse_newick(newick_str,curnode,pos,level){
+    curnode.suc = [];
+    curnode.tax = "";
+    curnode.date_s = "";
+    curnode.date_n = 0.0;
+    curnode.brlen = 0.0;
+    var children = 0;
+    var match;
+    while(pos < newick_str.length){
+	var matchDate = newick_str.substr(pos).match(/^\[&date=(\d+(\.\d+){0,1})\]/);
+	var matchBrlen = newick_str.substr(pos).match(/^\:(\d+(\.\d+){0,1})/);
+	if(newick_str.substr(pos,1) == "("){
+	    console.log("pos "+pos+" new node (");
+	    //id++;
+	    if(level==0){
+		pos = parse_newick(newick_str,curnode,pos+1,level+1);
+	    }else{
+		curnode.suc[children] = {};
+		children++;
+		pos = parse_newick(newick_str,curnode.suc[children-1],pos+1,level+1);
+	    }
+	} else if(newick_str.substr(pos,1) == ")"){
+	    console.log("pos "+pos+" End Node )");
+	    pos++;
+	    return(pos);
+	} else if(newick_str.substr(pos,1) == ","){
+	    console.log("pos "+pos+" Next Node ,");
+	    pos++;
+	} else if(matchDate != null){
+	    console.log(matchDate[0]+" "+matchDate[1]);
+	    if(level==0){
+		curnode.date_n = parseFloat(matchDate[1]);
+	    }else{
+		curnode.suc[children-1].date_n = parseFloat(matchDate[1]);
+	    }
+	    pos+=matchDate[0].length;
+	} else if(matchBrlen != null){
+	    console.log(matchBrlen[0]);
+	    if(level == 0){
+		curnode.brlen = parseFloat(matchBrlen[1]);		
+	    }else{
+		curnode.suc[children-1].brlen = parseFloat(matchBrlen[1]);
+	    }
+	    pos+=matchBrlen[0].length;
+	} else if(newick_str.substr(pos,1) == ";"){
+	    console.log("pos "+pos+" End tree");
+	    pos++;
+	} else {
+	    console.log(" --> Taxon ?");
+	    var match = newick_str.substr(pos).match(/^([^(\[\]\(\)\:;\,)]*)/);
+	    console.log(match[0]);
+	    var lastnode = {};
+	    lastnode.suc = [];
+	    lastnode.tax = match[1];
+	    lastnode.date_s = "";
+	    lastnode.date_n = 0.0;
+	    lastnode.brlen = 0.0;
+	    curnode.suc[children] = lastnode;
+	    children++;
+	    pos += match[0].length;
+	}
+    }
+}
+
+function add_ids_to_json_tree(treejson,id){
+    treejson.id = id;
+    for(var n=0;n<treejson.suc.length;n++){
+	id++;
+	id = add_ids_to_json_tree(treejson.suc[n],id);
+    }
+    return id;
+}
+
+
+
 function clear_canvas(canvas,width,height,zoom){
     var ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, width, height*zoom);
@@ -290,7 +365,15 @@ function init_canvas(){
 	    var treejson=$(canvas).data('json');
 	    trees[index] = treejson
 	    draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
- 	}
+ 	} else if (canvas.hasAttribute('data-newick')){
+	    var treenewick = $(canvas).data('newick');
+	    var treejson  = {};
+	    parse_newick(treenewick,treejson,0,0);
+	    add_ids_to_json_tree(treejson,0);
+	    console.log(JSON.stringify(treejson))
+	    trees[index] = treejson;
+	    draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
+	}
     });
 }
 
