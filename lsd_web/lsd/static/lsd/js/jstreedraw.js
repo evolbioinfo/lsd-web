@@ -1,4 +1,5 @@
 var trees = []
+var caches= []
 
 function parse_newick(newick_str,curnode,pos,level){
     curnode.suc = [];
@@ -74,38 +75,104 @@ function add_ids_to_json_tree(treejson,id){
 }
 
 
-
-function clear_canvas(canvas,width,height,zoom){
+function clear_canvas(canvas,width,height,x_zoom,y_zoom){
     var ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, width, height*zoom);
+    ctx.clearRect(0, 0, width*x_zoom, height*y_zoom);
 }
 
-function draw_tree(canvas,tree,width,height,zoom,offset){
+function update_canvas(cache, canvas, x_zoom, y_zoom, x_offset, y_offset){
     // Create an empty project and a view for the canvas:
     var ctx = canvas.getContext("2d");
-    canvas.width  = width;
-    canvas.height = height;
-    var level=0
-    var border=40
-    var min_y=border
-    var curheight=height * zoom
-    var curwidth= width
-    var max_y=curheight-border
-    var max_num_disp_years=25
-    var root = tree
-    var point_radius=2
-    max_date = tree_max_date(tree)
-    min_date = tree_min_date(tree)
-    //console.log(min_date+" "+max_date)
-    // y coords
-    // console.log(JSON.stringify(tree))
-    var total_terminals=count_terminals(tree)
-    //console.log(total_terminals)
-    var y_dict={}
-    tree_y_coords(y_dict,root,curheight,border,0,total_terminals,offset)
-    //console.log(JSON.stringify(y_dict))
-    draw_scale(ctx,min_date,max_date,width,curheight,border,max_num_disp_years)
-    coordinates(ctx,root.id,root,y_dict,min_date,max_date,width,0,0,border,point_radius)
+    canvas.width  = cache.width;
+    canvas.height = cache.height;
+
+    for(var n = 0; n < cache.nodes.length;n++){
+	ctx.beginPath();
+	ctx.arc(cache.nodes[n].x * x_zoom + x_offset, cache.nodes[n].y * y_zoom + y_offset, cache.nodes[n].rad, 0,2*Math.PI);
+	ctx.fillStyle = "#000000";
+	ctx.fill();
+	ctx.stroke();
+    }
+
+    for(var l = 0; l < cache.lines.length; l++){
+        ctx.beginPath();
+	ctx.moveTo(cache.lines[l].x1 * x_zoom + x_offset,cache.lines[l].y1 * y_zoom + y_offset);
+	ctx.lineTo(cache.lines[l].x2 * x_zoom + x_offset,cache.lines[l].y2 * y_zoom + y_offset);
+	ctx.strokeStyle= '#000000';
+	ctx.lineWidth=2;
+	ctx.lineCap = 'round';
+	ctx.lineJoin= 'round';
+	ctx.stroke();
+    }
+
+    for(var t = 0; t < cache.texts.length; t++){
+	ctx.beginPath();
+	ctx.font = "10px Arial";
+	ctx.fillStyle = '#000000';
+	ctx.textAlign = "left";
+	text = cache.texts[t].text;
+	ctx.fillText(text,cache.texts[t].x * x_zoom - ctx.measureText(text).width - cache.texts[t].rad + x_offset,cache.texts[t].y  * y_zoom - 2-cache.texts[t].rad + y_offset);
+    }
+
+    for(var l=0; l< cache.labels.length;l++){
+	ctx.beginPath();
+	ctx.font = "12px Arial";
+	ctx.fillStyle = '#000000';
+	ctx.textAlign = "left";
+	ctx.fillText(cache.labels[l].text,cache.labels[l].x * x_zoom + cache.labels[l].rad+2 + x_offset,cache.labels[l].y * y_zoom + 2+y_offset);
+    }
+
+    for(var sl = 0; sl < cache.scale_lines.length; sl++){
+	// We draw the scale line
+	ctx.beginPath();
+	ctx.setLineDash([4, 4]);
+	ctx.moveTo(cache.scale_lines[sl].x1 * x_zoom + x_offset, cache.scale_lines[sl].y1);// * y_zoom + y_offset);
+	ctx.lineTo(cache.scale_lines[sl].x2 * x_zoom + x_offset, cache.scale_lines[sl].y2);// * y_zoom + y_offset);
+	ctx.strokeStyle= 'grey';
+	ctx.lineWidth=1;
+	ctx.lineCap = 'round';
+	ctx.lineJoin= 'round';
+	ctx.stroke();
+	ctx.setLineDash([]);
+    }
+
+    for(var st = 0; st < cache.scale_texts.length; st++){
+	// We write the legend
+	ctx.beginPath();
+	ctx.font = "10px Arial";
+	ctx.fillStyle = 'grey';
+	ctx.textAlign = "left";
+	ctx.fillText(cache.scale_texts[st].text,cache.scale_texts[st].x * x_zoom + x_offset,cache.scale_texts[st].y);// * y_zoom + y_offset);
+    }
+}
+
+function date_layout(cache, tree, width, height){
+    var level=0;
+    var border=40;
+    var min_y=border;
+    var curheight=height;
+    var curwidth= width;
+    var max_y=curheight-border;
+    var max_num_disp_years=25;
+    var root = tree;
+    var point_radius=2;
+    max_date = tree_max_date(tree);
+    min_date = tree_min_date(tree);
+    var total_terminals=count_terminals(tree);
+    var y_dict={};
+
+    cache.nodes = [];
+    cache.lines = [];
+    cache.scale_texts = [];
+    cache.scale_lines = [];
+    cache.labels = [];
+    cache.texts = [];
+    cache.width = width;
+    cache.height = height;
+
+    cache_y_coords(y_dict,root, curheight, border, 0, total_terminals);
+    cache_scale(cache,min_date,max_date,width,curheight,border,max_num_disp_years);
+    cache_coordinates(cache,root.id,root,y_dict,min_date,max_date,width,0,0,border,point_radius);
 }
 
 function count_terminals(node){
@@ -119,7 +186,7 @@ function count_terminals(node){
 	    terminals += count_terminals(node.suc[n])
 	}
     }
-    return(terminals)
+    return(terminals);
 }
 
 function tree_min_date(node){
@@ -131,9 +198,8 @@ function tree_min_date(node){
 	    mind = Math.min(mind,tree_min_date(node.suc[n]))
 	}
     }
-    return(mind)
+    return(mind);
 }
-
 
 function tree_max_date(node){
     var maxd = node.date_n
@@ -141,21 +207,21 @@ function tree_max_date(node){
 	maxd = node.date_n
     }else{
 	for(var n=0; n<node.suc.length;n++){
-	    maxd = Math.max(maxd,tree_max_date(node.suc[n]))
+	    maxd = Math.max(maxd,tree_max_date(node.suc[n]));
 	}
     }
-    return(maxd)
+    return(maxd);
 
 }
 
-function tree_y_coords(y_dict, tree_node, height, border,num_terminal,total_terminals,offset){
+function cache_y_coords(y_dict, tree_node, height, border,num_terminal,total_terminals){
     if(!tree_node.suc || tree_node.suc.length==0){
-        y_dict[tree_node.id]=num_terminal*((height-2*border)*1.0/(total_terminals-1))+border+offset
+        y_dict[tree_node.id]=num_terminal*((height-2*border)*1.0/(total_terminals-1))+border
         num_terminal+=1
     } else{
         var meany=0
         for(var n=0; n<tree_node.suc.length;n++){
-	    num_terminal=tree_y_coords(y_dict,tree_node.suc[n],height,border,num_terminal,total_terminals,offset)
+	    num_terminal=cache_y_coords(y_dict,tree_node.suc[n],height,border,num_terminal,total_terminals)
             meany+=y_dict[tree_node.suc[n].id]
 	}
 	meany=meany*1.0/tree_node.suc.length
@@ -164,71 +230,35 @@ function tree_y_coords(y_dict, tree_node, height, border,num_terminal,total_term
     return num_terminal
 }
 
-function coordinates(ctx, root_id,node,y_dict,min_date,max_date,width,prev_x,prev_y,border,point_radius){
+function cache_coordinates(cache, root_id,node,y_dict,min_date,max_date,width,prev_x,prev_y,border,point_radius){
     var middle=y_dict[node.id]
     //On ajoute les lignes verticales precedentes si non root
-
     // On prend la date et on calcul la position x
     var x_coord= (node.date_n-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
     
     // On affiche le noeud
-    ctx.beginPath();
-    ctx.arc(x_coord,middle,point_radius,0,2*Math.PI);
-    ctx.fillStyle = "#000000";        
-    ctx.fill();
-    ctx.stroke();
-
+    cache.nodes.push({"x" : x_coord,"y":middle, "rad": point_radius});
+ 
     //# On affiche la ligne horizontale
-    ctx.beginPath();
-    ctx.moveTo(prev_x,prev_y);
     if(node.id != root_id){
-	ctx.moveTo(prev_x,prev_y);
-	//ctx.lineTo(prev_x,middle);
-	ctx.lineTo(x_coord, middle);
-    }else{
-	//ctx.moveTo(prev_x,middle);
+	cache.lines.push({"x1" : prev_x, "y1": prev_y, "x2": x_coord, "y2": middle});
     }
-    //ctx.lineTo(x_coord, middle);
-    ctx.strokeStyle= '#000000';
-    ctx.lineWidth=2;
-    ctx.lineCap = 'round';
-    ctx.lineJoin= 'round';
-    ctx.stroke();
 
     // On affiche la date du noeud
     var year  = Math.floor(node.date_n)
     var month = node.date_n-year
     var month = Math.floor(month*12)+1
     var date  = year+"/"+pad(month,2)
-    
-    ctx.beginPath();
-    ctx.font = "10px Arial";
-    ctx.fillStyle = '#000000';
-    ctx.textAlign = "left";
-    ctx.fillText(date,x_coord-ctx.measureText(date).width-point_radius,middle-2-point_radius);
+    cache.texts.push({"text": date, "x" : x_coord, "y" : middle,"rad": point_radius});
     
     // On affiche le nom du noeud
     if(node.suc.length == 0){
-	ctx.beginPath();
-	ctx.font = "12px Arial";
-	ctx.fillStyle = '#000000';
-	ctx.textAlign = "left";
-	ctx.fillText(node.tax,x_coord+point_radius+2,middle+2);
+	cache.labels.push({"text": node.tax, "x" : x_coord, "y" : middle,"rad": point_radius});
     }
-
-    // tw,th = image_draw.textsize(date, font=fnt_small)
-    // image_draw.text([x_coord-tw-point_radius,middle-th], date, (0,0,0,255), font=fnt_small)
-
-    //# On affiche le nom du noeud
-    // if(len(node.succ)==0):
-    // print(node.data.taxon)
-    // tw,th = image_draw.textsize(node.data.taxon, font=fnt_large)
-    // image_draw.text([x_coord+point_radius*2,middle-th/2], node.data.taxon, (0,0,0,255), font=fnt_large)
-
 
     // On passe aux suivants
     for(var n=0;n<node.suc.length;n++){
-	coordinates(ctx,root_id,node.suc[n],y_dict,min_date,max_date,width,x_coord,middle, border,point_radius)
+	cache_coordinates(cache,root_id,node.suc[n],y_dict,min_date,max_date,width,x_coord,middle, border,point_radius)
     }
 }
 
@@ -238,31 +268,15 @@ function pad(n, width, z) {
   return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
-function draw_scale(ctx, min_date,max_date,width,height,border,max_num_disp_years){
+function cache_scale(cache, min_date,max_date,width,height,border,max_num_disp_years){
     var max_year = Math.ceil(max_date)
     var min_year = Math.floor(min_date)
     var mod= Math.ceil((max_year-min_year)*1.0/max_num_disp_years)
     for(var year=min_year; year<=max_year; year++){
         if (year%mod==0){
             var x_coord= (year-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
-	    // We draw the scale line
-	    ctx.beginPath();
-	    ctx.setLineDash([4, 4]);
-	    ctx.moveTo(x_coord,0);
-	    ctx.lineTo(x_coord,height);
-	    ctx.strokeStyle= 'grey';
-	    ctx.lineWidth=1;
-	    ctx.lineCap = 'round';
-	    ctx.lineJoin= 'round';
-	    ctx.stroke();
-	    ctx.setLineDash([]);
-
-	    // We write the legend
-	    ctx.beginPath();
-	    ctx.font = "10px Arial";
-	    ctx.fillStyle = 'grey';
-	    ctx.textAlign = "left";
-	    ctx.fillText(year,x_coord,10);
+	    cache.scale_lines.push({"x1": x_coord, "y1": 0,"x2" : x_coord, "y2": height});
+	    cache.scale_texts.push({"text": year,"x": x_coord, "y": 10});
 	}
     }
 }
@@ -271,9 +285,13 @@ function init_canvas(){
     $('.canvaswrapper').each(function(index,item){
 	var height=500;
 	var width=1000;
-	var zoom=1;
+	var x_zoom=1;
+	var y_zoom=1;
 	var prevy=0;
-	var offset=0;
+	var prevx=0;
+	var x_offset=0;
+	var y_offset=0;
+	var x_speed = 0;
 	var y_speed = 0;
 	var last_time = null;
 	var still_down = false;
@@ -284,20 +302,26 @@ function init_canvas(){
 	$('#zoomslider_'+index).on("input change",function(){
 	    var curzoom = $(this).val();
 	    //console.log(canvas);
-	    clear_canvas(canvas,width,height,zoom);
-	    zoom = curzoom;
-	    $("#valuezoom").html(zoom);
-	    if(offset<-((height)*zoom-$(canvas).height())){
-		offset = -(height)*zoom+$(canvas).height();
+	    clear_canvas(canvas,$(canvas).width(),height,x_zoom,y_zoom);
+	    x_zoom = curzoom;
+	    y_zoom = curzoom;
+	    $("#valuezoom").html(y_zoom);
+	    if(y_offset<-((height)*y_zoom - height)){
+		y_offset = -(height)*y_zoom + height;
+	    }
+	    if(x_offset<-($(canvas).width()*x_zoom-$(canvas).width())){
+		x_offset = -$(canvas).width()*x_zoom+$(canvas).width();
 	    }
 	    if(trees.length >= index){
-      		draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
+		update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+		//draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 	    }
 	});
 
 	$(canvas).mousedown(function(e){
 	    still_down = true;
 	    prevy=e.pageY;
+	    prevx=e.pageX;
 	    last_time = Date.now();
 	    if(animation != null){
 		clearInterval(animation);
@@ -307,21 +331,32 @@ function init_canvas(){
 
 	$(canvas).mousemove(function(e){
 	    if(still_down){
-		offset-=(prevy-e.pageY);
+		y_offset-=(prevy-e.pageY);
+		x_offset-=(prevx-e.pageX);
 		if(last_time != null){
 		    y_speed = (prevy-e.pageY) / ((Date.now() - last_time));
+		    x_speed = (prevx-e.pageX) / ((Date.now() - last_time));
 		}
 		last_time = Date.now();
 		prevy=e.pageY;
-		if(offset>0){
-		    offset=0;
+		prevx=e.pageX;
+		if(x_offset>0){
+		    x_offset=0;
 		}
-		if(offset<-((height)*zoom-$(canvas).height())){
-		    offset = -(height)*zoom+$(canvas).height();
+		if(y_offset>0){
+		    y_offset=0;
 		}
+		if(y_offset<-((height)*y_zoom-height)){
+		    y_offset = -(height)*y_zoom+height;
+		}
+		if(x_offset<-($(canvas).width()*x_zoom-$(canvas).width())){
+		    x_offset = -$(canvas).width()*x_zoom+$(canvas).width();
+		}
+		console.log(x_offset);
 		//console.log("Up at: "+e.pageY," ==> Offset: "+offset);
-		console.log("Y Speed : "+y_speed);
-		draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
+		console.log("Speed = x:"+x_speed+" , y:"+y_speed);
+		update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+		//draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 	    }
 	});
 
@@ -329,19 +364,30 @@ function init_canvas(){
 	    if(animation === null && still_down){
 		still_down=false;
 		animation = setInterval(function(){
-		    offset-=y_speed*10
-		    if(offset>0){
-			offset=0;
+		    y_offset-=y_speed*10;
+		    x_offset-=x_speed*10;
+		    if(y_offset>0){
+			y_offset = 0;
 			y_speed = 0;
 		    }
-		    if(offset<-((height)*zoom-$(canvas).height())){
-			offset = -(height)*zoom+$(canvas).height();
+		    if(x_offset>0){
+			x_offset = 0;
+			x_speed = 0;
+		    }
+		    if(y_offset<-((height)*y_zoom-$(canvas).height())){
+			y_offset = -(height)*y_zoom+$(canvas).height();
 			y_speed = 0;
 		    }
-		    draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
-		    console.log("Animation: "+offset+ " Speed : "+y_speed);
+		    if(x_offset<-($(canvas).width()*x_zoom-$(canvas).width())){
+			x_offset = -$(canvas).width()*x_zoom+$(canvas).width();
+			x_speed = 0;
+		    }
+		    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
+		    update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+		    console.log("Animation: "+y_offset+ " Speed : "+y_speed);
 		    y_speed /= 1.1;
-		    if(Math.abs(y_speed) < 0.5){
+		    x_speed /= 1.1;
+		    if(Math.abs(y_speed) < 0.5 && Math.abs(x_speed) < 0.5){
 			console.log("stop animation");
 			clearInterval(animation);
 			animation = null;
@@ -351,20 +397,26 @@ function init_canvas(){
 	});
 
 	if(canvas.hasAttribute('data-url')){
-	var tree_url=$(canvas).data('url');
+	    var tree_url=$(canvas).data('url');
 	    $.ajax({
 		url: tree_url,
 		type: 'GET',
 		dataType: 'json',
 		success: function(code_json,status){
-		    trees[index] = code_json
-		    draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
+		    trees[index] = code_json;
+		    caches[index] = {};
+		    date_layout(caches[index], trees[index], $(canvas).width(),height);
+		    update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+		    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 		}
 	    });
 	} else if(canvas.hasAttribute('data-json')) {
 	    var treejson=$(canvas).data('json');
 	    trees[index] = treejson
-	    draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
+	    caches[index] = {};
+	    date_layout(caches[index], trees[index], $(canvas).width(),height);
+	    update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+	    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
  	} else if (canvas.hasAttribute('data-newick')){
 	    var treenewick = $(canvas).data('newick');
 	    var treejson  = {};
@@ -372,7 +424,10 @@ function init_canvas(){
 	    add_ids_to_json_tree(treejson,0);
 	    console.log(JSON.stringify(treejson))
 	    trees[index] = treejson;
-	    draw_tree(canvas,trees[index],$(canvas).width(),height,zoom,offset);
+	    caches[index] = {};
+	    date_layout(caches[index], trees[index], $(canvas).width(),height);
+	    update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+	    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 	}
     });
 }
