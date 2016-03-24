@@ -9,13 +9,21 @@
 }
 
 /* .canvaswrapper > canvas, */
-.canvaswrapper > input {
+.canvaswrapper > input[type=range]{
     position: absolute;
-    left:0;
-    top:0;
-    transform: rotate(0deg);
-    width:5px;
-    height:200px;
+    width:200px;
+    /* height:50px; */
+    transform: rotate(-90deg);
+    -webkit-tranform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -moz-transform: rotate(0deg);
+    left:-80px;
+    top:100px;
+}
+
+.canvaswrapper > input:focus {
+    outline : none;
 }
 
 .canvaswrapper > input {

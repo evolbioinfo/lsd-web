@@ -13,7 +13,7 @@ function parse_newick(newick_str,curnode,pos,level){
 	var matchDate = newick_str.substr(pos).match(/^\[&date=(\d+(\.\d+){0,1})\]/);
 	var matchBrlen = newick_str.substr(pos).match(/^\:(\d+(\.\d+){0,1})/);
 	if(newick_str.substr(pos,1) == "("){
-	    console.log("pos "+pos+" new node (");
+	    //console.log("pos "+pos+" new node (");
 	    //id++;
 	    if(level==0){
 		pos = parse_newick(newick_str,curnode,pos+1,level+1);
@@ -23,14 +23,14 @@ function parse_newick(newick_str,curnode,pos,level){
 		pos = parse_newick(newick_str,curnode.suc[children-1],pos+1,level+1);
 	    }
 	} else if(newick_str.substr(pos,1) == ")"){
-	    console.log("pos "+pos+" End Node )");
+	    //console.log("pos "+pos+" End Node )");
 	    pos++;
 	    return(pos);
 	} else if(newick_str.substr(pos,1) == ","){
-	    console.log("pos "+pos+" Next Node ,");
+	    //console.log("pos "+pos+" Next Node ,");
 	    pos++;
 	} else if(matchDate != null){
-	    console.log(matchDate[0]+" "+matchDate[1]);
+	    //console.log(matchDate[0]+" "+matchDate[1]);
 	    if(level==0){
 		curnode.date_n = parseFloat(matchDate[1]);
 	    }else{
@@ -38,7 +38,7 @@ function parse_newick(newick_str,curnode,pos,level){
 	    }
 	    pos+=matchDate[0].length;
 	} else if(matchBrlen != null){
-	    console.log(matchBrlen[0]);
+	    // console.log(matchBrlen[0]);
 	    if(level == 0){
 		curnode.brlen = parseFloat(matchBrlen[1]);		
 	    }else{
@@ -49,9 +49,9 @@ function parse_newick(newick_str,curnode,pos,level){
 	    console.log("pos "+pos+" End tree");
 	    pos++;
 	} else {
-	    console.log(" --> Taxon ?");
+	    //console.log(" --> Taxon ?");
 	    var match = newick_str.substr(pos).match(/^([^(\[\]\(\)\:;\,)]*)/);
-	    console.log(match[0]);
+	    // console.log(match[0]);
 	    var lastnode = {};
 	    lastnode.suc = [];
 	    lastnode.tax = match[1];
@@ -74,14 +74,22 @@ function add_ids_to_json_tree(treejson,id){
     return id;
 }
 
-
 function clear_canvas(canvas,width,height,x_zoom,y_zoom){
     var ctx = canvas.getContext("2d");
     ctx.clearRect(0, 0, width*x_zoom, height*y_zoom);
 }
 
-function update_canvas(cache, canvas, x_zoom, y_zoom, x_offset, y_offset){
+function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset){
     // Create an empty project and a view for the canvas:
+    if(! cache.y_zoom){
+	y_zoom = 1;
+    }
+    if(! cache.x_zoom){
+	x_zoom = 1;
+    }
+    y_offset = check_offset(y_offset, height, y_zoom);
+    x_offset = check_offset(y_offset, $(canvas).width(), x_zoom);
+    
     var ctx = canvas.getContext("2d");
     canvas.width  = cache.width;
     canvas.height = cache.height;
@@ -146,6 +154,16 @@ function update_canvas(cache, canvas, x_zoom, y_zoom, x_offset, y_offset){
     }
 }
 
+function check_offset(offset, length, zoom){
+    var outoffset = offset;
+    if(offset>0){
+	outoffset = 0;
+    } else if(offset < -(length*zoom-length)){
+	outoffset = -length*zoom+length;
+    }
+    return outoffset;
+}
+
 function date_layout(cache, tree, width, height){
     var level=0;
     var border=40;
@@ -169,6 +187,8 @@ function date_layout(cache, tree, width, height){
     cache.texts = [];
     cache.width = width;
     cache.height = height;
+    cache.x_zoom = false;
+    cache.y_zoom = true;
 
     cache_y_coords(y_dict,root, curheight, border, 0, total_terminals);
     cache_scale(cache,min_date,max_date,width,curheight,border,max_num_disp_years);
@@ -305,15 +325,12 @@ function init_canvas(){
 	    clear_canvas(canvas,$(canvas).width(),height,x_zoom,y_zoom);
 	    x_zoom = curzoom;
 	    y_zoom = curzoom;
+	    y_offset = check_offset(y_offset, height, y_zoom);
+	    x_offset = check_offset(y_offset, $(canvas).width(), x_zoom);
+
 	    $("#valuezoom").html(y_zoom);
-	    if(y_offset<-((height)*y_zoom - height)){
-		y_offset = -(height)*y_zoom + height;
-	    }
-	    if(x_offset<-($(canvas).width()*x_zoom-$(canvas).width())){
-		x_offset = -$(canvas).width()*x_zoom+$(canvas).width();
-	    }
 	    if(trees.length >= index){
-		update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+		update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 		//draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 	    }
 	});
@@ -340,51 +357,41 @@ function init_canvas(){
 		last_time = Date.now();
 		prevy=e.pageY;
 		prevx=e.pageX;
-		if(x_offset>0){
-		    x_offset=0;
-		}
-		if(y_offset>0){
-		    y_offset=0;
-		}
-		if(y_offset<-((height)*y_zoom-height)){
-		    y_offset = -(height)*y_zoom+height;
-		}
-		if(x_offset<-($(canvas).width()*x_zoom-$(canvas).width())){
-		    x_offset = -$(canvas).width()*x_zoom+$(canvas).width();
-		}
-		console.log(x_offset);
+		y_offset = check_offset(y_offset, height, y_zoom);
+		x_offset = check_offset(y_offset, $(canvas).width(), x_zoom);
+		//console.log(x_offset);
 		//console.log("Up at: "+e.pageY," ==> Offset: "+offset);
-		console.log("Speed = x:"+x_speed+" , y:"+y_speed);
-		update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+		//console.log("Speed = x:"+x_speed+" , y:"+y_speed);
+		update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 		//draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 	    }
 	});
 
+	// Mouse Wheel Scroll
+	$(canvas).on('wheel',function(e){
+	    if(animation != null){
+		clearInterval(animation);
+		animation = null;
+		y_speed = 0;
+		x_speed = 0;
+	    }
+	    y_offset-= e.originalEvent.deltaY;
+	    y_offset = check_offset(y_offset, height, y_zoom);
+	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
+	    e.preventDefault();
+	});
+	
 	$(canvas).on("mouseout mouseup",function(e){
 	    if(animation === null && still_down){
 		still_down=false;
 		animation = setInterval(function(){
 		    y_offset-=y_speed*10;
 		    x_offset-=x_speed*10;
-		    if(y_offset>0){
-			y_offset = 0;
-			y_speed = 0;
-		    }
-		    if(x_offset>0){
-			x_offset = 0;
-			x_speed = 0;
-		    }
-		    if(y_offset<-((height)*y_zoom-$(canvas).height())){
-			y_offset = -(height)*y_zoom+$(canvas).height();
-			y_speed = 0;
-		    }
-		    if(x_offset<-($(canvas).width()*x_zoom-$(canvas).width())){
-			x_offset = -$(canvas).width()*x_zoom+$(canvas).width();
-			x_speed = 0;
-		    }
+		    x_offset = check_offset(x_offset, $(canvas).width(), x_zoom);
+		    y_offset = check_offset(y_offset, height, y_zoom);
 		    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
-		    update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
-		    console.log("Animation: "+y_offset+ " Speed : "+y_speed);
+		    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
+		    //console.log("Animation: "+y_offset+ " Speed : "+y_speed);
 		    y_speed /= 1.1;
 		    x_speed /= 1.1;
 		    if(Math.abs(y_speed) < 0.5 && Math.abs(x_speed) < 0.5){
@@ -406,7 +413,7 @@ function init_canvas(){
 		    trees[index] = code_json;
 		    caches[index] = {};
 		    date_layout(caches[index], trees[index], $(canvas).width(),height);
-		    update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+		    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 		    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 		}
 	    });
@@ -415,18 +422,18 @@ function init_canvas(){
 	    trees[index] = treejson
 	    caches[index] = {};
 	    date_layout(caches[index], trees[index], $(canvas).width(),height);
-	    update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 	    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
  	} else if (canvas.hasAttribute('data-newick')){
 	    var treenewick = $(canvas).data('newick');
 	    var treejson  = {};
 	    parse_newick(treenewick,treejson,0,0);
 	    add_ids_to_json_tree(treejson,0);
-	    console.log(JSON.stringify(treejson))
+	    //console.log(JSON.stringify(treejson));
 	    trees[index] = treejson;
 	    caches[index] = {};
 	    date_layout(caches[index], trees[index], $(canvas).width(),height);
-	    update_canvas(caches[index], canvas, x_zoom, y_zoom, x_offset, y_offset);
+	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 	    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 	}
     });
@@ -444,3 +451,4 @@ function getMousePos(canvas, evt) {
 $(document).ready(function(){
     init_canvas();
 });
+
