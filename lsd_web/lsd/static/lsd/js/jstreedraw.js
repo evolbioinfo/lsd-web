@@ -189,7 +189,8 @@ function date_layout(cache, tree, width, height){
     cache.height = height;
     cache.x_zoom = false;
     cache.y_zoom = true;
-
+    cache.index = new SpatialIndex(width,height);
+    
     cache_y_coords(y_dict,root, curheight, border, 0, total_terminals);
     cache_scale(cache,min_date,max_date,width,curheight,border,max_num_disp_years);
     cache_coordinates(cache,root.id,root,y_dict,min_date,max_date,width,0,0,border,point_radius);
@@ -258,7 +259,8 @@ function cache_coordinates(cache, root_id,node,y_dict,min_date,max_date,width,pr
     
     // On affiche le noeud
     cache.nodes.push({"x" : x_coord,"y":middle, "rad": point_radius});
- 
+    cache.index.add_node(node,x_coord,middle);
+    
     //# On affiche la ligne horizontale
     if(node.id != root_id){
 	cache.lines.push({"x1" : prev_x, "y1": prev_y, "x2": x_coord, "y2": middle});
@@ -380,7 +382,7 @@ function init_canvas(){
 	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 	    e.preventDefault();
 	});
-	
+
 	$(canvas).on("mouseout mouseup",function(e){
 	    if(animation === null && still_down){
 		still_down=false;
@@ -403,6 +405,24 @@ function init_canvas(){
 	    }
 	});
 
+	// Mouse Wheel Scroll
+	$(canvas).click(function(e){
+	    console.log((e.offsetX)+" "+(e.offsetY));
+ 	    var zx = x_zoom;
+	    var zy = y_zoom;
+	    if(! caches[index].y_zoom){
+		zy = 1;
+	    }
+	    if(! caches[index].x_zoom){
+		zx = 1;
+	    }
+	    console.log(Math.floor((e.offsetX - x_offset)*1.0/zx)+" "+ Math.floor((e.offsetY - y_offset)*1.0/zy));
+	    nodes = caches[index].index.get_nodes(Math.floor((e.offsetX - x_offset)*1.0/zx), Math.floor((e.offsetY - y_offset)*1.0/zy),5);
+	    for(i = 0; i < nodes.length; i++){
+		console.log("Found node : "+nodes[i].date_n+" : "+nodes[i].brlen+" : ("+nodes[i].tax+")");
+	    }
+	});
+	
 	if(canvas.hasAttribute('data-url')){
 	    var tree_url=$(canvas).data('url');
 	    $.ajax({
@@ -446,6 +466,38 @@ function getMousePos(canvas, evt) {
         x: evt.clientX - rect.left,
         y: evt.clientY - rect.top
     };
+}
+
+// Index, l'espace est divisé en carrés de 20 px de côté;
+function SpatialIndex(width,height){
+    this.resolution = 20;
+    this.cols = Math.ceil(width/this.resolution);
+    this.rows = Math.ceil(height/this.resolution);
+    this.index = [];
+
+    for(var x = 0; x < this.cols; x++){
+	for(var y = 0; y < this.rows; y++){
+	    this.index[y*this.cols+x] = [];
+	}
+    }
+    
+    this.add_node = function(tree_node, x, y){
+	var ind = Math.floor(y/this.resolution)*this.cols + Math.floor(x/this.resolution);
+	this.index[ind].push({"node": tree_node,"x":x,"y":y});
+    }
+
+    this.get_nodes = function(x, y, precision){
+	var output = [];
+	var ind = Math.floor(y/this.resolution)*this.cols + Math.floor(x/this.resolution);
+	for(var i = 0; i < this.index[ind].length;i++){
+	    var obj = this.index[ind][i];
+	    if(Math.abs(obj.x-x)<=precision &&
+	       Math.abs(obj.y-y)<=precision){
+		output.push(obj.node);
+	    }
+	}
+	return(output);
+    }
 }
 
 $(document).ready(function(){
