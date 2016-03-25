@@ -113,6 +113,17 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	ctx.stroke();
     }
 
+    // We draw a circle around the selected node
+    if(cache.selected != null){
+	ctx.beginPath();
+	ctx.arc(cache.selected.x * x_zoom + x_offset, cache.selected.y * y_zoom + y_offset, 10, 0,2*Math.PI);
+	//ctx.fillStyle = "#000000";
+	ctx.strokeStyle= 'lightblue';
+	ctx.lineWidth=4;
+	//ctx.fill();
+	ctx.stroke();
+    }
+    
     for(var t = 0; t < cache.texts.length; t++){
 	ctx.beginPath();
 	ctx.font = "10px Arial";
@@ -190,6 +201,7 @@ function date_layout(cache, tree, width, height){
     cache.x_zoom = false;
     cache.y_zoom = true;
     cache.index = new SpatialIndex(width,height);
+    cache.selected = null;
     
     cache_y_coords(y_dict,root, curheight, border, 0, total_terminals);
     cache_scale(cache,min_date,max_date,width,curheight,border,max_num_disp_years);
@@ -418,9 +430,14 @@ function init_canvas(){
 	    }
 	    console.log(Math.floor((e.offsetX - x_offset)*1.0/zx)+" "+ Math.floor((e.offsetY - y_offset)*1.0/zy));
 	    nodes = caches[index].index.get_nodes(Math.floor((e.offsetX - x_offset)*1.0/zx), Math.floor((e.offsetY - y_offset)*1.0/zy),5);
-	    for(i = 0; i < nodes.length; i++){
-		console.log("Found node : "+nodes[i].date_n+" : "+nodes[i].brlen+" : ("+nodes[i].tax+")");
+	    if(nodes.length == 0){
+		caches[index].selected = null;
 	    }
+	    for(i = 0; i < nodes.length; i++){
+		console.log("Found node : "+nodes[i].node.date_n+" : "+nodes[i].node.brlen+" : ("+nodes[i].node.tax+")");
+		caches[index].selected = nodes[i];
+	    }
+	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 	});
 	
 	if(canvas.hasAttribute('data-url')){
@@ -468,9 +485,9 @@ function getMousePos(canvas, evt) {
     };
 }
 
-// Index, l'espace est divisé en carrés de 20 px de côté;
+// Index, l'espace est divisé en carrés de 100 px de côté;
 function SpatialIndex(width,height){
-    this.resolution = 20;
+    this.resolution = 100;
     this.cols = Math.ceil(width/this.resolution);
     this.rows = Math.ceil(height/this.resolution);
     this.index = [];
@@ -493,7 +510,7 @@ function SpatialIndex(width,height){
 	    var obj = this.index[ind][i];
 	    if(Math.abs(obj.x-x)<=precision &&
 	       Math.abs(obj.y-y)<=precision){
-		output.push(obj.node);
+		output.push(obj);
 	    }
 	}
 	return(output);
