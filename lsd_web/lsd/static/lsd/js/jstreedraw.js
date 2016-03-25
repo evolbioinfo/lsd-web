@@ -432,10 +432,13 @@ function init_canvas(){
 	    nodes = caches[index].index.get_nodes(Math.floor((e.offsetX - x_offset)*1.0/zx), Math.floor((e.offsetY - y_offset)*1.0/zy),5);
 	    if(nodes.length == 0){
 		caches[index].selected = null;
-	    }
-	    for(i = 0; i < nodes.length; i++){
-		console.log("Found node : "+nodes[i].node.date_n+" : "+nodes[i].node.brlen+" : ("+nodes[i].node.tax+")");
-		caches[index].selected = nodes[i];
+		$(canvas).trigger("node:unselected");
+	    }else{
+		for(i = 0; i < nodes.length; i++){
+		    console.log("Found node : "+nodes[i].node.date_n+" : "+nodes[i].node.brlen+" : ("+nodes[i].node.tax+")");
+		    caches[index].selected = nodes[i];
+		}
+		$(canvas).trigger("node:selected",[caches[index].selected.node]);
 	    }
 	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 	});
