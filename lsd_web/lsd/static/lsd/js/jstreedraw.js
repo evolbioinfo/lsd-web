@@ -11,7 +11,7 @@ function parse_newick(newick_str,curnode,pos,level){
     var match;
     while(pos < newick_str.length){
 	var matchDate = newick_str.substr(pos).match(/^\[&date=(\d+(\.\d+){0,1})\]/);
-	var matchBrlen = newick_str.substr(pos).match(/^\:(\d+(\.\d+){0,1})/);
+	var matchBrlen = newick_str.substr(pos).match(/^\:(\d+(\.\d+){0,1}(e-\d+){0,1})/);
 	if(newick_str.substr(pos,1) == "("){
 	    //console.log("pos "+pos+" new node (");
 	    //id++;
