@@ -1,6 +1,22 @@
 var trees = []
 var caches= []
 
+function delete_zero_length_branches(treejson){
+    var childs = [];
+    for(var n=0;n<treejson.suc.length;n++){
+	delete_zero_length_branches(treejson.suc[n]);
+	// for each not terminal children with 0 brlen
+	if(treejson.suc[n].brlen == 0 && treejson.suc[n].suc.length>0) {
+	    for(var n2=0;n2<treejson.suc[n].suc.length;n2++) {
+		childs.push(treejson.suc[n].suc[n2]);
+	    }
+	} else {
+	    childs.push(treejson.suc[n]);
+	}
+    }
+    treejson.suc = childs;
+}
+
 function parse_newick(newick_str,curnode,pos,level){
     curnode.suc = [];
     curnode.tax = "";
@@ -475,6 +491,7 @@ function init_canvas(){
 	    var treenewick = $(canvas).data('newick');
 	    var treejson  = {};
 	    parse_newick(treenewick,treejson,0,0);
+	    delete_zero_length_branches(treejson);
 	    add_ids_to_json_tree(treejson,0);
 	    //console.log(JSON.stringify(treejson));
 	    trees[index] = treejson;
