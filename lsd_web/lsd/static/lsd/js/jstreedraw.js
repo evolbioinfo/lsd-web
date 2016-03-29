@@ -46,7 +46,7 @@ function parse_newick(newick_str,curnode,pos,level){
 	    }
 	    pos+=matchBrlen[0].length;
 	} else if(newick_str.substr(pos,1) == ";"){
-	    console.log("pos "+pos+" End tree");
+	    //console.log("pos "+pos+" End tree");
 	    pos++;
 	} else {
 	    //console.log(" --> Taxon ?");
@@ -96,7 +96,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 
     for(var n = 0; n < cache.nodes.length;n++){
 	ctx.beginPath();
-	ctx.arc(cache.nodes[n].x * x_zoom + x_offset, cache.nodes[n].y * y_zoom + y_offset, cache.nodes[n].rad, 0,2*Math.PI);
+	ctx.arc(cache.nodes[n].x * x_zoom + x_offset + cache.border, cache.nodes[n].y * y_zoom + y_offset + cache.border, cache.nodes[n].rad, 0,2*Math.PI);
 	ctx.fillStyle = "#000000";
 	ctx.fill();
 	ctx.stroke();
@@ -104,10 +104,10 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 
     for(var l = 0; l < cache.lines.length; l++){
         ctx.beginPath();
-	ctx.moveTo(cache.lines[l].x1 * x_zoom + x_offset,cache.lines[l].y1 * y_zoom + y_offset);
-	ctx.lineTo(cache.lines[l].x2 * x_zoom + x_offset,cache.lines[l].y2 * y_zoom + y_offset);
+	ctx.moveTo(cache.lines[l].x1 * x_zoom + x_offset + cache.border,cache.lines[l].y1 * y_zoom + y_offset + cache.border);
+	ctx.lineTo(cache.lines[l].x2 * x_zoom + x_offset + cache.border,cache.lines[l].y2 * y_zoom + y_offset + cache.border);
 	ctx.strokeStyle= '#000000';
-	ctx.lineWidth=2;
+	ctx.lineWidth=1;
 	ctx.lineCap = 'round';
 	ctx.lineJoin= 'round';
 	ctx.stroke();
@@ -116,7 +116,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
     // We draw a circle around the selected node
     if(cache.selected != null){
 	ctx.beginPath();
-	ctx.arc(cache.selected.x * x_zoom + x_offset, cache.selected.y * y_zoom + y_offset, 10, 0,2*Math.PI);
+	ctx.arc(cache.selected.x * x_zoom + x_offset + cache.border, cache.selected.y * y_zoom + y_offset + cache.border, 10, 0,2*Math.PI);
 	//ctx.fillStyle = "#000000";
 	ctx.strokeStyle= 'lightblue';
 	ctx.lineWidth=4;
@@ -130,7 +130,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	ctx.fillStyle = '#000000';
 	ctx.textAlign = "left";
 	text = cache.texts[t].text;
-	ctx.fillText(text,cache.texts[t].x * x_zoom - ctx.measureText(text).width - cache.texts[t].rad + x_offset,cache.texts[t].y  * y_zoom - 2-cache.texts[t].rad + y_offset);
+	ctx.fillText(text,cache.texts[t].x * x_zoom - ctx.measureText(text).width - cache.texts[t].rad + x_offset + cache.border,cache.texts[t].y  * y_zoom - 2-cache.texts[t].rad + y_offset + cache.border);
     }
 
     for(var l=0; l< cache.labels.length;l++){
@@ -138,15 +138,15 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	ctx.font = "12px Arial";
 	ctx.fillStyle = '#000000';
 	ctx.textAlign = "left";
-	ctx.fillText(cache.labels[l].text,cache.labels[l].x * x_zoom + cache.labels[l].rad+2 + x_offset,cache.labels[l].y * y_zoom + 2+y_offset);
+	ctx.fillText(cache.labels[l].text,cache.labels[l].x * x_zoom + cache.labels[l].rad+2 + x_offset + cache.border,cache.labels[l].y * y_zoom + 2+y_offset + cache.border);
     }
 
     for(var sl = 0; sl < cache.scale_lines.length; sl++){
 	// We draw the scale line
 	ctx.beginPath();
 	ctx.setLineDash([4, 4]);
-	ctx.moveTo(cache.scale_lines[sl].x1 * x_zoom + x_offset, cache.scale_lines[sl].y1);// * y_zoom + y_offset);
-	ctx.lineTo(cache.scale_lines[sl].x2 * x_zoom + x_offset, cache.scale_lines[sl].y2);// * y_zoom + y_offset);
+	ctx.moveTo(cache.scale_lines[sl].x1 * x_zoom + x_offset + cache.border, cache.scale_lines[sl].y1);// * y_zoom + y_offset);
+	ctx.lineTo(cache.scale_lines[sl].x2 * x_zoom + x_offset + cache.border, cache.scale_lines[sl].y2);// * y_zoom + y_offset);
 	ctx.strokeStyle= 'grey';
 	ctx.lineWidth=1;
 	ctx.lineCap = 'round';
@@ -161,7 +161,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	ctx.font = "10px Arial";
 	ctx.fillStyle = 'grey';
 	ctx.textAlign = "left";
-	ctx.fillText(cache.scale_texts[st].text,cache.scale_texts[st].x * x_zoom + x_offset,cache.scale_texts[st].y);// * y_zoom + y_offset);
+	ctx.fillText(cache.scale_texts[st].text,cache.scale_texts[st].x * x_zoom + x_offset + cache.border,cache.scale_texts[st].y);// * y_zoom + y_offset);
     }
 }
 
@@ -177,14 +177,15 @@ function check_offset(offset, length, zoom){
 
 function date_layout(cache, tree, width, height){
     var level=0;
-    var border=40;
-    var min_y=border;
-    var curheight=height;
-    var curwidth= width;
-    var max_y=curheight-border;
+    var tree_border=0;
+    var canvas_border=40;
+    var min_y=tree_border;
+    var curheight=height-2*canvas_border;
+    var curwidth= width-2*canvas_border;
+    var max_y=curheight-tree_border;
     var max_num_disp_years=25;
     var root = tree;
-    var point_radius=2;
+    var point_radius=1.5;
     max_date = tree_max_date(tree);
     min_date = tree_min_date(tree);
     var total_terminals=count_terminals(tree);
@@ -202,10 +203,11 @@ function date_layout(cache, tree, width, height){
     cache.y_zoom = true;
     cache.index = new SpatialIndex(width,height);
     cache.selected = null;
+    cache.border = canvas_border;
     
-    cache_y_coords(y_dict,root, curheight, border, 0, total_terminals);
-    cache_scale(cache,min_date,max_date,width,curheight,border,max_num_disp_years);
-    cache_coordinates(cache,root.id,root,y_dict,min_date,max_date,width,0,0,border,point_radius);
+    cache_y_coords(y_dict,root, curheight, tree_border, 0, total_terminals);
+    cache_scale(cache,min_date,max_date,width,height,tree_border,max_num_disp_years);
+    cache_coordinates(cache,root.id,root,y_dict,min_date,max_date,width,0,0,tree_border,point_radius);
 }
 
 function count_terminals(node){
@@ -271,12 +273,15 @@ function cache_coordinates(cache, root_id,node,y_dict,min_date,max_date,width,pr
     
     // On affiche le noeud
     cache.nodes.push({"x" : x_coord,"y":middle, "rad": point_radius});
+    //console.log("add node: ",x_coord+" "+middle);
     cache.index.add_node(node,x_coord,middle);
     
     //# On affiche la ligne horizontale
     if(node.id != root_id){
-	cache.lines.push({"x1" : prev_x, "y1": prev_y, "x2": x_coord, "y2": middle});
+	// cache.lines.push({"x1" : prev_x, "y1": prev_y, "x2": x_coord, "y2": middle});
+        cache.lines.push({"x1": prev_x, "y1" : prev_y,"x2": prev_x,"y2": middle});
     }
+    cache.lines.push({"x1":prev_x,"y1":middle,"x2":x_coord,"y2":middle});
 
     // On affiche la date du noeud
     var year  = Math.floor(node.date_n)
@@ -332,7 +337,7 @@ function init_canvas(){
 	var animation = null;
 
 	var canvas = $(item).find("canvas").get(0);
-	$(item).append("<input id=\"zoomslider_"+index+"\" type=\"range\" min=\"1\" max=\"20\" step=\"0.5\" value=\"1\" orient=\"vertical\"/>");
+	$(item).append("<input id=\"zoomslider_"+index+"\" type=\"range\" min=\"1\" max=\"40\" step=\"0.5\" value=\"1\" orient=\"vertical\"/>");
 	$('#zoomslider_'+index).on("input change",function(){
 	    var curzoom = $(this).val();
 	    //console.log(canvas);
@@ -384,10 +389,10 @@ function init_canvas(){
 	// Mouse Wheel Scroll
 	$(canvas).on('wheel',function(e){
 	    if(animation != null){
-		clearInterval(animation);
-		animation = null;
-		y_speed = 0;
-		x_speed = 0;
+	    	clearInterval(animation);
+	    	animation = null;
+	    	y_speed = 0;
+	    	x_speed = 0;
 	    }
 	    y_offset-= e.originalEvent.deltaY;
 	    y_offset = check_offset(y_offset, height, y_zoom);
@@ -409,7 +414,7 @@ function init_canvas(){
 		    y_speed /= 1.1;
 		    x_speed /= 1.1;
 		    if(Math.abs(y_speed) < 0.5 && Math.abs(x_speed) < 0.5){
-			console.log("stop animation");
+			//console.log("stop animation");
 			clearInterval(animation);
 			animation = null;
 		    }
@@ -429,15 +434,15 @@ function init_canvas(){
 	    }
 	    x_offset = check_offset(x_offset, $(canvas).width(), zx);
 	    y_offset = check_offset(y_offset, height, zy);
-	    console.log((e.offsetX)+" "+(e.offsetY)+" "+caches[index].x_zoom+" "+x_offset+" "+y_offset);
-	    console.log(Math.floor((e.offsetX - x_offset)*1.0/zx)+" "+ Math.floor((e.offsetY - y_offset)*1.0/zy));
-	    nodes = caches[index].index.get_nodes(Math.floor((e.offsetX - x_offset)*1.0/zx), Math.floor((e.offsetY - y_offset)*1.0/zy),5);
+	    //console.log((e.offsetX)+" "+(e.offsetY)+" "+caches[index].x_zoom+" "+x_offset+" "+y_offset);
+	    //console.log(Math.floor((e.offsetX - x_offset)*1.0/zx)+" "+ Math.floor((e.offsetY - y_offset)*1.0/zy));
+	    nodes = caches[index].index.get_nodes(Math.floor((e.offsetX - x_offset - caches[index].border)*1.0/zx), Math.floor((e.offsetY - y_offset - caches[index].border)*1.0/zy),5);
 	    if(nodes.length == 0){
 		caches[index].selected = null;
 		$(canvas).trigger("node:unselected");
 	    }else{
 		for(i = 0; i < nodes.length; i++){
-		    console.log("Found node : "+nodes[i].node.date_n+" : "+nodes[i].node.brlen+" : ("+nodes[i].node.tax+")");
+		    //console.log("Found node : "+nodes[i].node.date_n+" : "+nodes[i].node.brlen+" : ("+nodes[i].node.tax+")");
 		    caches[index].selected = nodes[i];
 		}
 		$(canvas).trigger("node:selected",[caches[index].selected.node]);
@@ -493,8 +498,8 @@ function getMousePos(canvas, evt) {
 // Index, l'espace est divisé en carrés de 100 px de côté;
 function SpatialIndex(width,height){
     this.resolution = 100;
-    this.cols = Math.ceil(width/this.resolution);
-    this.rows = Math.ceil(height/this.resolution);
+    this.cols = Math.ceil(width*1.0/this.resolution+1);
+    this.rows = Math.ceil(height*1.0/this.resolution+1);
     this.index = [];
 
     for(var x = 0; x < this.cols; x++){
