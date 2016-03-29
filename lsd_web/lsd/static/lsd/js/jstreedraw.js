@@ -123,7 +123,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	ctx.moveTo(cache.lines[l].x1 * x_zoom + x_offset + cache.border,cache.lines[l].y1 * y_zoom + y_offset + cache.border);
 	ctx.lineTo(cache.lines[l].x2 * x_zoom + x_offset + cache.border,cache.lines[l].y2 * y_zoom + y_offset + cache.border);
 	ctx.strokeStyle= '#000000';
-	ctx.lineWidth=1;
+	ctx.lineWidth=2;
 	ctx.lineCap = 'round';
 	ctx.lineJoin= 'round';
 	ctx.stroke();
@@ -353,22 +353,6 @@ function init_canvas(){
 	var animation = null;
 
 	var canvas = $(item).find("canvas").get(0);
-	$(item).append("<input id=\"zoomslider_"+index+"\" type=\"range\" min=\"1\" max=\"40\" step=\"0.5\" value=\"1\" orient=\"vertical\"/>");
-	$('#zoomslider_'+index).on("input change",function(){
-	    var curzoom = $(this).val();
-	    //console.log(canvas);
-	    clear_canvas(canvas,$(canvas).width(),height,x_zoom,y_zoom);
-	    x_zoom = curzoom;
-	    y_zoom = curzoom;
-	    y_offset = check_offset(y_offset, height, y_zoom);
-	    x_offset = check_offset(x_offset, $(canvas).width(), x_zoom);
-
-	    $("#valuezoom").html(y_zoom);
-	    if(trees.length >= index){
-		update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
-		//draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
-	    }
-	});
 
 	$(canvas).mousedown(function(e){
 	    still_down = true;
@@ -394,24 +378,31 @@ function init_canvas(){
 		prevx=e.pageX;
 		y_offset = check_offset(y_offset, height, y_zoom);
 		x_offset = check_offset(x_offset, $(canvas).width(), x_zoom);
-		//console.log(x_offset);
-		//console.log("Up at: "+e.pageY," ==> Offset: "+offset);
-		//console.log("Speed = x:"+x_speed+" , y:"+y_speed);
 		update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
-		//draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 	    }
 	});
 
 	// Mouse Wheel Scroll
 	$(canvas).on('wheel',function(e){
 	    if(animation != null){
-	    	clearInterval(animation);
-	    	animation = null;
-	    	y_speed = 0;
-	    	x_speed = 0;
+		clearInterval(animation);
+		animation = null;
+		y_speed = 0;
+		x_speed = 0;
 	    }
-	    y_offset-= e.originalEvent.deltaY;
-	    y_offset = check_offset(y_offset, height, y_zoom);
+	    if(e.originalEvent.deltaY > 0){
+		x_zoom -= 0.5;
+		y_zoom -= 0.5;
+	    }else{
+		x_zoom += 0.5;
+		y_zoom += 0.5;
+	    }
+	    if(x_zoom < 1){
+		x_zoom = 1;
+	    }
+	    if(y_zoom < 1){
+		y_zoom = 1;
+	    }
 	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 	    e.preventDefault();
 	});
