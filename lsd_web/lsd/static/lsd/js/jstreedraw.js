@@ -88,7 +88,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	x_zoom = 1;
     }
     y_offset = check_offset(y_offset, height, y_zoom);
-    x_offset = check_offset(y_offset, $(canvas).width(), x_zoom);
+    x_offset = check_offset(x_offset, $(canvas).width(), x_zoom);
     
     var ctx = canvas.getContext("2d");
     canvas.width  = cache.width;
@@ -340,7 +340,7 @@ function init_canvas(){
 	    x_zoom = curzoom;
 	    y_zoom = curzoom;
 	    y_offset = check_offset(y_offset, height, y_zoom);
-	    x_offset = check_offset(y_offset, $(canvas).width(), x_zoom);
+	    x_offset = check_offset(x_offset, $(canvas).width(), x_zoom);
 
 	    $("#valuezoom").html(y_zoom);
 	    if(trees.length >= index){
@@ -372,7 +372,7 @@ function init_canvas(){
 		prevy=e.pageY;
 		prevx=e.pageX;
 		y_offset = check_offset(y_offset, height, y_zoom);
-		x_offset = check_offset(y_offset, $(canvas).width(), x_zoom);
+		x_offset = check_offset(x_offset, $(canvas).width(), x_zoom);
 		//console.log(x_offset);
 		//console.log("Up at: "+e.pageY," ==> Offset: "+offset);
 		//console.log("Speed = x:"+x_speed+" , y:"+y_speed);
@@ -419,7 +419,6 @@ function init_canvas(){
 
 	// Mouse Wheel Scroll
 	$(canvas).click(function(e){
-	    console.log((e.offsetX)+" "+(e.offsetY));
  	    var zx = x_zoom;
 	    var zy = y_zoom;
 	    if(! caches[index].y_zoom){
@@ -428,6 +427,9 @@ function init_canvas(){
 	    if(! caches[index].x_zoom){
 		zx = 1;
 	    }
+	    x_offset = check_offset(x_offset, $(canvas).width(), zx);
+	    y_offset = check_offset(y_offset, height, zy);
+	    console.log((e.offsetX)+" "+(e.offsetY)+" "+caches[index].x_zoom+" "+x_offset+" "+y_offset);
 	    console.log(Math.floor((e.offsetX - x_offset)*1.0/zx)+" "+ Math.floor((e.offsetY - y_offset)*1.0/zy));
 	    nodes = caches[index].index.get_nodes(Math.floor((e.offsetX - x_offset)*1.0/zx), Math.floor((e.offsetY - y_offset)*1.0/zy),5);
 	    if(nodes.length == 0){
