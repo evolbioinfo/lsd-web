@@ -3,7 +3,7 @@ from Bio import Phylo
 from PIL import Image, ImageDraw, ImageChops, ImageFont
 import numpy
 import math
-
+import os
 import re
 
 class TreeImage:
@@ -24,8 +24,9 @@ class TreeImage:
         min_date = TreeImage.get_min_date(tree)
         #print str(min_date)+" "+str(max_date)
         image = Image.new('RGBA', (width,height), (255,255,255,255))
-        fnt_large = ImageFont.truetype('Pillow/Tests/fonts/DejaVuSans.ttf', 14)
-        fnt_small = ImageFont.truetype('Pillow/Tests/fonts/DejaVuSans.ttf', 10)
+	font_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+"/../fonts/"
+        fnt_large = ImageFont.truetype(font_path+'/DejaVuSans.ttf', 14)
+        fnt_small = ImageFont.truetype(font_path+'/DejaVuSans.ttf', 10)
         d = ImageDraw.Draw(image)
         y_dict={}
         TreeImage.y_coords(y_dict,tree,root,height,border,0)
