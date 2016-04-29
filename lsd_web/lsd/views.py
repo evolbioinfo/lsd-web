@@ -11,6 +11,8 @@ from django.shortcuts import redirect
 from lsd.controlers.TreeJSON import TreeJSON
 from Bio import Phylo
 from Bio import Nexus
+import math
+
 
 # Create your views here.
 from django.http import HttpResponse
@@ -66,13 +68,14 @@ def check_run(request):
         
     r = LSDRun.objects.get(run_name=jid)
 
+
     if r.run_status == r.RUNNING:
         context = {
             'status' : "Running",
             'statusshort': r.run_status,
             'jid'    : jid,
-            'times'  : str(times+1),
-            'refresh': str(2^times)
+            'times'  : int(times)+1,
+            'refresh': math.pow(2,int(times)+1)
         }
         return  render(request, 'lsd/wait_run.html', context)
 
@@ -81,8 +84,8 @@ def check_run(request):
             'status' : "Pending",
             'statusshort': r.run_status,
             'jid'    : jid,
-            'times'  : times+1,
-            'refresh': 2^times
+            'times'  : int(times)+1,
+            'refresh': math.pow(2,int(times)+1)
         }
         return  render(request, 'lsd/wait_run.html', context)        
 
