@@ -1,5 +1,5 @@
-from ete3 import Tree, TreeStyle, TextFace, faces, AttrFace
-from ete3.parser import newick
+# from ete3 import Tree, TreeStyle, TextFace, faces, AttrFace
+# from ete3.parser import newick
 import base64
 import os
 import shutil
