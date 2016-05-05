@@ -17,6 +17,14 @@ function delete_zero_length_branches(treejson){
     treejson.suc = childs;
 }
 
+/** Returns true if the tree is rooted:
+    i.e. the root has 2 child
+    Otherwise, we can consider it unrooted
+*/
+function is_rooted(tree){
+    return(tree.suc.length == 2);
+}
+
 function new_node(parentNode){
     return {parent:parentNode,
 	    suc : [],
@@ -692,19 +700,21 @@ function SpatialIndex(width,height){
 /*
 var treejson  = {};
 parse_newick("((1:1,2:1):1,(3:1,4:1):1,(5:1,6:1):1);",treejson,0,0);
+print("Rooted: "+is_rooted(treejson));
 print(to_newick(treejson));
 treejson = reroot(treejson, treejson.suc[0]);
 print(to_newick(treejson));
 
 var tree2 = {};
 parse_newick("((1:1,2:1):1,((3:1,4:1):1,(5:1,6:1):1):1)",tree2,0,0);
+print("Rooted: "+is_rooted(tree2));
 print(to_newick(tree2));
 tree2 = reroot(tree2, tree2.suc[1]);
 print(to_newick(tree2));
 
 var tree3 = {};
 parse_newick("((1:1,2:1):1,((3:1,4:1):1,(5:1,6:1):1):1)",tree3,0,0);
-
+print("Rooted: ",is_rooted(tree3));
 n = node_from_taxnames(tree3, ["6","5"]);
 a = get_ancestor(n);
 t = get_taxas(a);
