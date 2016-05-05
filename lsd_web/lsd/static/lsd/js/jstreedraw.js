@@ -103,6 +103,21 @@ function parse_newick(newick_str,curnode,pos,level){
     }
 }
 
+function reroot_from_outgroup(tree, outgroup, deleteoutgroup){
+    var a = get_ancestor(outgroup);
+    var new_tree = reroot(tree, a);
+    var i;
+    if(deleteoutgroup){
+	for(i = 0; i < new_tree.suc.length; i++){
+	    if(new_tree.suc[i] != a){
+		new_tree.suc[i].parent = null;
+		return new_tree.suc[i];
+	    }
+	}
+    }
+    return new_tree;
+}
+
 /** 
     Reroot the tree in the middle of the branch 
     connecting node to its parent 
@@ -674,7 +689,8 @@ function SpatialIndex(width,height){
     }
 }
 
-/*var treejson  = {};
+/*
+var treejson  = {};
 parse_newick("((1:1,2:1):1,(3:1,4:1):1,(5:1,6:1):1);",treejson,0,0);
 print(to_newick(treejson));
 treejson = reroot(treejson, treejson.suc[0]);
@@ -695,6 +711,10 @@ t = get_taxas(a);
 for(k=0; k < t.length; k++){
     print("Outgroup: "+t[k].tax);
 }
+
+print(to_newick(tree3));
+tree3 = reroot_from_outgroup(tree3, n, true);
+print(to_newick(tree3));
 */
 
 $(document).ready(function(){
