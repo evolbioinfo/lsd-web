@@ -17,6 +17,28 @@ function delete_zero_length_branches(treejson){
     treejson.suc = childs;
 }
 
+function new_node(parentNode){
+    return {parent:parentNode,
+	    suc : [],
+	    date_n : 0,
+	    date_s : "",
+	    brlen : 0,
+	    tax : ""}
+}
+
+function to_newick(tree){
+    var i;
+    if(tree.suc.length == 0)
+	return tree.tax;
+    var output =  "(";
+    for(i=0; i<tree.suc.length;i++){
+	if(i>0) output += ",";
+	output += to_newick(tree.suc[i])+":"+tree.suc[i].brlen;
+    }
+    output += ")";
+    return(output);
+}
+
 function parse_newick(newick_str,curnode,pos,level){
     curnode.suc = [];
     curnode.tax = "";
@@ -34,7 +56,7 @@ function parse_newick(newick_str,curnode,pos,level){
 	    if(level==0){
 		pos = parse_newick(newick_str,curnode,pos+1,level+1);
 	    }else{
-		curnode.suc[children] = {};
+		curnode.suc[children] = new_node(curnode);
 		children++;
 		pos = parse_newick(newick_str,curnode.suc[children-1],pos+1,level+1);
 	    }
@@ -68,7 +90,7 @@ function parse_newick(newick_str,curnode,pos,level){
 	    //console.log(" --> Taxon ?");
 	    var match = newick_str.substr(pos).match(/^([^(\[\]\(\)\:;\,)]*)/);
 	    // console.log(match[0]);
-	    var lastnode = {};
+	    var lastnode = new_node(curnode);
 	    lastnode.suc = [];
 	    lastnode.tax = match[1];
 	    lastnode.date_s = "";
@@ -79,6 +101,122 @@ function parse_newick(newick_str,curnode,pos,level){
 	    pos += match[0].length;
 	}
     }
+}
+
+/** 
+    Reroot the tree in the middle of the branch 
+    connecting node to its parent 
+*/
+function reroot(root, node){
+    var dist, new_root, parent_bk, parent_bk2, parent_bk3, i, di, dist_bk, root_bk, j, k;
+    
+    dist = node.brlen / 2;
+    dist_bk = node.brlen;
+    new_root = new_node(null);
+    root_bk = new_root;
+    new_root.suc[0] = node;
+    new_root.suc[0].brlen = dist;
+    parent_bk = node.parent;
+    new_root.suc[0].parent = new_root;
+
+    /* We get the position of the node in the array */
+    for(i=0; i < parent_bk.suc.length; i++)
+	if(parent_bk.suc[i] == node)
+	    break;
+
+    new_root.suc[1] = parent_bk;
+    di = parent_bk.brlen;
+    parent_bk.brlen = dist_bk - dist;
+    parent_bk2 = parent_bk.parent;
+    parent_bk.parent = new_root;
+
+    while (parent_bk2 != null){
+	parent_bk3 = parent_bk2.parent;   /* store r's parent */
+	parent_bk.suc[i] = parent_bk2;  /* change r to p's child */
+	for (i = 0; i < parent_bk2.suc.length; ++i) /* update i */
+	    if (parent_bk2.suc[i] == parent_bk) break;
+	parent_bk2.parent = parent_bk; /* update r's parent */
+	dist_bk = parent_bk2.brlen; parent_bk2.brlen = di; di = dist_bk; /* swap r->d and d, i.e. update r->d */
+	root_bk = parent_bk; parent_bk = parent_bk2; parent_bk2 = parent_bk3; /* update p, q and r */
+    }
+    if (parent_bk.suc.length == 2) { /* remove p and link the other child of p to q */
+	parent_bk2 = parent_bk.suc[1 - i]; /* get the other child */
+	for (i = 0; i < root_bk.suc.length; ++i) /* the position of p in q */
+	    if (root_bk.suc[i] == parent_bk) break;
+	parent_bk2.brlen += parent_bk.brlen;
+	parent_bk2.parent = root_bk;
+	root_bk.suc[i] = parent_bk2; /* link r to q */
+    } else{
+	for (j = k = 0; j < parent_bk.suc.length; ++j) {
+	    parent_bk.suc[k] = parent_bk.suc[j];
+	    if (j != i) ++k;
+	}
+	--parent_bk.suc.length;
+    }
+    return new_root;
+}
+
+/* Returns all taxa nodes linked to this internal node */
+function get_taxas(node){
+    var i;
+    if( node.suc.length == 0)
+	return([node]);
+    var nodes = [];
+    for(i=0; i < node.suc.length; i++){
+	var h, sucnodes = get_taxas(node.suc[i]);
+	for(h = 0; h < sucnodes.length; h++){
+	    nodes.push(sucnodes[h]);
+	}
+    }
+    return(nodes);
+}
+
+
+function node_from_taxnames(tree,taxnames){
+    var i, j, taxnodes, outnodes = [];
+    taxnodes = get_taxas(tree);
+    for(i = 0; i < taxnames.length ; i++)
+	for(j = 0; j<taxnodes.length ; j++)
+	    if(taxnodes[j].tax == taxnames[i]){
+		outnodes.push(taxnodes[j]);
+		break;
+	    }
+    return outnodes;
+}
+
+/*
+  Returns true if all nodes of the subset are in the nodes
+*/
+function compare_nodes(nodes, nodesSubSet){
+    var found , i, j;
+    for(j = 0; j< nodesSubSet.length; j++){
+	found = false;
+	for(i = 0; i < nodes.length; i++){
+	    if(nodes[i] == nodesSubSet[j]){
+		found = true;
+		break;
+	    }
+	}
+	if(!found)
+	    return false;
+    }
+    return true;
+}
+
+/* 
+   returns the internal node common ancestor of all nodes in argument 
+   Considers the tree as rooted
+*/
+function get_ancestor(nodes){
+    if(nodes.length == 0)
+	return null;
+    
+    var node = nodes[0];
+    while(!compare_nodes(get_taxas(node),nodes) && node!=null){
+	node = node.parent;
+    }
+    
+    return node;
 }
 
 function add_ids_to_json_tree(treejson,id){
@@ -476,6 +614,7 @@ function init_canvas(){
 	    trees[index] = treejson
 	    caches[index] = {};
 	    date_layout(caches[index], trees[index], $(canvas).width(),height);
+	    delete_zero_length_branches(trees[index]);
 	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 	    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
  	} else if (canvas.hasAttribute('data-newick')){
@@ -534,6 +673,29 @@ function SpatialIndex(width,height){
 	return(output);
     }
 }
+
+/*var treejson  = {};
+parse_newick("((1:1,2:1):1,(3:1,4:1):1,(5:1,6:1):1);",treejson,0,0);
+print(to_newick(treejson));
+treejson = reroot(treejson, treejson.suc[0]);
+print(to_newick(treejson));
+
+var tree2 = {};
+parse_newick("((1:1,2:1):1,((3:1,4:1):1,(5:1,6:1):1):1)",tree2,0,0);
+print(to_newick(tree2));
+tree2 = reroot(tree2, tree2.suc[1]);
+print(to_newick(tree2));
+
+var tree3 = {};
+parse_newick("((1:1,2:1):1,((3:1,4:1):1,(5:1,6:1):1):1)",tree3,0,0);
+
+n = node_from_taxnames(tree3, ["6","5"]);
+a = get_ancestor(n);
+t = get_taxas(a);
+for(k=0; k < t.length; k++){
+    print("Outgroup: "+t[k].tax);
+}
+*/
 
 $(document).ready(function(){
     init_canvas();
