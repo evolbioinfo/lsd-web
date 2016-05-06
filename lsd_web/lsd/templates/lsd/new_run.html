@@ -11,6 +11,10 @@
 <form action="{% url 'lsd:submit_run' %}" method="post" enctype="multipart/form-data">
 {% csrf_token %}
 
+<div id="errordiv">
+
+</div>
+
 <!-- Tab panes -->
 <div class="tab-content">
   <div role="tabpanel" class="tab-pane active" id="trees">
@@ -19,6 +23,46 @@
       <div class="col-sm-10">
 	<input type="file" class="form-control-file" id="inputtree" name="inputtree" />
 	<small class="text-muted">The input file may contain one or several trees in newick format</small>
+      </div>
+    </div>
+    <div class="form-group row" id="treeinfo" style="display:none;">
+      <label class="col-sm-2 form-control-label">Informations about Loaded Tree</label>
+      <div class="col-sm-10">
+	<div id="rootedtreediv" style="display:none;">
+	  The tree is rooted.
+	  Do you want to reroot using an outgroup?
+	</div>
+	<div id="unrootedtreediv" style="display:none;">
+	  The tree is unrooted.
+	  Do you want to root using an outgroup?
+	</div>
+	<div class="radio">
+	  <label>
+	    <input type="radio" data-target="div#yesoutgroup" data-toggle="radio-collapse" name="outgroupornot" id="yesoutgroup" value="yes"/>
+	    Yes
+ 	  </label>
+	</div>
+	<div class="radio">
+	  <label>
+	    <input type="radio" data-target="div#nooutgroup" data-toggle="radio-collapse" name="outgroupornot" id="nooutgroup" value="no" checked/>
+	    No
+ 	  </label>
+	</div>
+	<fieldset class="form-group">
+	  <div id="nooutgroup">
+	  </div>
+	  <div id="yesoutgroup">
+	    Enter one species of the outgroup
+	    <form>
+	      <input type="text" id="taxon" />
+	      <ul class="list-group" id="alltaxalist">
+	      </ul>
+	      <input type="button" class="btn btn-primary" id="getancestor">More taxa</input>
+
+	    </form>
+	  </div>
+	</fieldset>
+
       </div>
     </div>
     <div class="form-group row">

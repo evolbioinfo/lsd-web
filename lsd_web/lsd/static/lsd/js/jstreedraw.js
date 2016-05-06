@@ -1,5 +1,8 @@
-var trees = []
-var caches= []
+var trees = [];
+var caches= [];
+
+var input_tree;
+var outgroup_ancestor = null;
 
 function delete_zero_length_branches(treejson){
     var childs = [];
@@ -47,7 +50,7 @@ function to_newick(tree){
     return(output);
 }
 
-function parse_newick(newick_str,curnode,pos,level){
+function parse_newick(newick_str, curnode, pos, level){
     curnode.suc = [];
     curnode.tax = "";
     curnode.date_s = "";
@@ -192,6 +195,16 @@ function get_taxas(node){
 	}
     }
     return(nodes);
+}
+
+function get_taxas_string(node){
+    var taxStr = [];
+    var i;
+    var taxnodes = get_taxas(node);
+    for(i=0;i<taxnodes.length;i++){
+	taxStr.push(taxnodes[i].tax);
+    }
+    return taxStr;
 }
 
 
@@ -697,6 +710,62 @@ function SpatialIndex(width,height){
     }
 }
 
+/* We read the file when it is */
+function init_tree_reader(){
+    $("#rootedtreediv").hide();
+    $("#unrootedtreediv").hide();
+    $('#inputtree').change(function(){
+	var $input = $(this);
+	var inputFiles = this.files;
+	if(inputFiles == undefined || inputFiles.length == 0) return;
+	var inputFile = inputFiles[0];
+	var reader = new FileReader();
+	reader.onload = function(event) {
+	    input_tree = new_node(null);
+	    parse_newick(event.target.result,input_tree,0,0);
+	    $("#treeinfo").show();	    
+	    if(is_rooted(input_tree)){
+		$("#rootedtreediv").show();
+		$("#unrootedtreediv").hide();
+	    }else{
+		$("#unrootedtreediv").show();
+		$("#rootedtreediv").hide();		
+	    }
+	    $('#taxon').autocomplete({
+		source : get_taxas_string(input_tree),
+	    });
+
+	    $('#taxon').on("autocompletechange", function(event, ui){
+		console.log(ui.item.value);
+		$("#alltaxalist").empty();
+		$("#alltaxalist").prepend('<li>' + ui.item.value + '</li>');
+		var tax = node_from_taxnames(input_tree,[ui.item.value]);
+		if(tax.length==1){
+		    outgroup_ancestor = tax[0];
+		}
+	    });
+	    $('#getancestor').click(function(){
+		if(outgroup_ancestor != null){
+		    outgroup_ancestor = outgroup_ancestor.parent;
+		    console.log(to_newick(outgroup_ancestor));
+		    var tax = get_taxas(outgroup_ancestor);
+		    var i;
+		    $("#alltaxalist").empty();
+		    for(i=0; i < tax.length;i++){
+			$("#alltaxalist").prepend('<li>' + tax[i].tax + '</li>');
+		    }
+		}
+	    });
+        };
+        reader.onerror = function(event) {
+            $('#errordiv').text("Error opening file: " + event.target.error.code);
+        };
+        reader.readAsText(inputFile);
+    });
+}
+
+
+
 /*
 var treejson  = {};
 parse_newick("((1:1,2:1):1,(3:1,4:1):1,(5:1,6:1):1);",treejson,0,0);
@@ -729,5 +798,8 @@ print(to_newick(tree3));
 
 $(document).ready(function(){
     init_canvas();
+
+    init_tree_reader();
+    
 });
 
