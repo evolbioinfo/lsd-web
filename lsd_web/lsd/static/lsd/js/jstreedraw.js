@@ -736,14 +736,41 @@ function init_tree_reader(){
 	    });
 
 	    $('#taxon').on("autocompletechange", function(event, ui){
-		console.log(ui.item.value);
-		$("#alltaxalist").empty();
-		$("#alltaxalist").prepend('<li>' + ui.item.value + '</li>');
-		var tax = node_from_taxnames(input_tree,[ui.item.value]);
-		if(tax.length==1){
-		    outgroup_ancestor = tax[0];
+		// console.log(ui.item.value);
+		// $("#alltaxalist").empty();
+		if(ui.item == null){
+		    return;
+		}
+		$("#alltaxalist").prepend('<li class="list-group-item">' + ui.item.value + '</li>');
+		var tax = [];
+		$("#alltaxalist li").each(function(){
+		    tax.push($(this).text());
+		});
+		var taxnodes = node_from_taxnames(input_tree,tax);
+		if(taxnodes.length==1){
+		    $("#alltaxalist").empty();
+		    outgroup_ancestor = taxnodes[0];
+		    $("#alltaxalist").prepend('<li class="list-group-item">' + taxnodes[0].tax + '</li>');
+		}else if(taxnodes.length > 1){
+		    outgroup_ancestor = get_ancestor(taxnodes);
+		    $("#alltaxalist").empty();
+		    var i;
+		    var alltaxa = get_taxas(outgroup_ancestor);
+		    for(i=0; i< alltaxa.length; i++){
+			$("#alltaxalist").prepend('<li class="list-group-item">' + alltaxa[i].tax + '</li>');
+		    }
+		}
+		if(outgroup_ancestor != null){
+		    console.log(to_newick(outgroup_ancestor));
 		}
 	    });
+
+	    $('#clearoutgroup').click(function(){
+		$("#alltaxalist").empty();
+		$("#taxon").val("");
+		outgroup_ancestor = null;
+	    });
+	    
 	    $('#getancestor').click(function(){
 		if(outgroup_ancestor != null){
 		    outgroup_ancestor = outgroup_ancestor.parent;
@@ -756,6 +783,21 @@ function init_tree_reader(){
 		    }
 		}
 	    });
+
+	    $('#reroottree').click(function(){
+		if(outgroup_ancestor != null){
+		    $("#alltaxalist").empty();
+		    $('#taxon').val("");
+		    var tax = get_taxas(outgroup_ancestor);
+		    input_tree = reroot_from_outgroup(input_tree, tax, true);
+		    $('#taxon').autocomplete({
+			source : get_taxas_string(input_tree),
+		    });
+		    outgroup_ancestor = null;
+		    console.log(to_newick(input_tree));
+		}
+	    });
+	    
         };
         reader.onerror = function(event) {
             $('#errordiv').text("Error opening file: " + event.target.error.code);
