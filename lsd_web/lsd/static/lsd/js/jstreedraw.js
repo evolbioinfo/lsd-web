@@ -43,18 +43,22 @@ function new_node(parentNode){
 }
 
 function to_newick(tree){
+    var output = to_newick_recur(tree);
+    return(output+";");
+}
+
+function to_newick_recur(tree){
     var i;
     if(tree.suc.length == 0)
 	return tree.tax;
     var output =  "(";
     for(i=0; i<tree.suc.length;i++){
 	if(i>0) output += ",";
-	output += to_newick(tree.suc[i])+":"+tree.suc[i].brlen;
+	output += to_newick_recur(tree.suc[i])+":"+tree.suc[i].brlen;
     }
     output += ")";
     return(output);
 }
-
 function parse_newick(newick_str, curnode, pos, level){
     curnode.suc = [];
     curnode.tax = "";
@@ -656,6 +660,7 @@ function init_canvas(){
 		dataType: 'json',
 		success: function(code_json,status){
 		    trees[index] = code_json;
+		    delete_zero_length_branches(trees[index]);
 		    caches[index] = {};
 		    date_layout(caches[index], trees[index], $(canvas).width(),height);
 		    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
@@ -739,17 +744,22 @@ function init_tree_reader(){
 	var reader = new FileReader();
 	reader.onload = function(event) {
 	    try {
-		$('#errordiv').text("");
 		input_tree = new_node(null);
 		parse_newick(event.target.result,input_tree,0,0);
-		// console.log(to_newick(input_tree));
+		$("#inputtreestring").val(to_newick(input_tree));
 		$("#treeinfo").show();	    
 		if(is_rooted(input_tree)){
 		    $("#rootedtreediv").show();
 		    $("#unrootedtreediv").hide();
+		    $("#estimaterootselect").empty();
+		    $("#estimaterootselect").append("<option value=\"no\" selected>No</option>");
+		    $("#estimaterootselect").append("<option value=\"l\">Around the given root</option>");
+		    $("#estimaterootselect").append("<option value=\"a\">Searches on all branches</option>");
 		}else{
 		    $("#unrootedtreediv").show();
 		    $("#rootedtreediv").hide();		
+		    $("#estimaterootselect").empty();
+		    $("#estimaterootselect").append("<option value=\"a\">Searches on all branches</option>");
 		}
 		$('#taxon').autocomplete({
 		    source : get_taxas_string(input_tree),
@@ -803,14 +813,15 @@ function init_tree_reader(){
 				$("#alltaxalist").prepend('<li>' + tax[i].tax + '</li>');
 			    }
 			}else{
-			    $("#errordiv").text("Cannot get more taxa, outgroup is already the whole tree");
+			    outgrouperror("Cannot get more taxa, outgroup is already the whole tree");
 			}
 		    }else{
-			$("#errordiv").text("You should first select a Taxon");
+			outgrouperror("You should first select a Taxon");
 		    }
 		});
 		
-		$('#reroottree').click(function(){
+		$('#reroottree').click(function(event){
+		    event.preventDefault();
 		    if(outgroup_ancestor != null){
 			if(outgroup_ancestor != input_tree){
 			    var tax = get_taxas(outgroup_ancestor);
@@ -822,18 +833,21 @@ function init_tree_reader(){
 			    });
 			    outgroup_ancestor = null;
 			    console.log(to_newick(input_tree));
+			    $("#inputtreestring").val(to_newick(input_tree));
+			    outgroupsuccess("Tree succesfully rerooted");
 			}else{
-			    $("#errordiv").text("Outgroup is the whole tree, won't reroot");
+			    outgrouperror("Outgroup is the whole tree, won't reroot");
 			}
 		    }else{
-			$("#errordiv").text("No outgroup is defined");
+			outgrouperror("No outgroup is defined");
 		    }
 		});
 		
 	    } catch (e) {
-		$('#errordiv').text("["+e.name+"] : " + e.message);
+		treeerror("["+e.name+"] : " + e.message);
 		$("#newrunform")[0].reset();
 	    }
+	    treesuccess("Tree succesfully imported");
 	};
         reader.onerror = function(event) {
             $('#errordiv').text("Error opening file: " + event.target.error.code);
@@ -843,6 +857,40 @@ function init_tree_reader(){
     });
 }
 
+
+function outgrouperror(message){
+    $("#outgrouperror").show();
+    $("#outgrouperrortext").text(message);
+    $("#outgrouperror").delay(2000).slideUp(400, function() {
+	$(this).hide();
+    });
+}
+
+
+function outgroupsuccess(message){
+    $("#outgroupsuccess").show();
+    $("#outgroupsuccesstext").text(message);
+    $("#outgroupsuccess").delay(2000).slideUp(400, function() {
+	$(this).hide();
+    });
+}
+
+function treeerror(message){
+    $("#treeerror").show();
+    $("#treeerrortext").text(message);
+    $("#treeerror").delay(4000).slideUp(400, function() {
+	$(this).hide();
+    });
+}
+
+
+function treesuccess(message){
+    $("#treesuccess").show();
+    $("#treesuccesstext").text(message);
+    $("#treesuccess").delay(4000).slideUp(400, function() {
+	$(this).hide();
+    });
+}
 
 
 /*

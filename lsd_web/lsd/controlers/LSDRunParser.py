@@ -16,18 +16,26 @@ class LSDRunParser:
 
     @staticmethod
     def parse(request):
-        tree=LSDRunParser.parseFile(request.FILES['inputtree']);
+        tree=request.POST['inputtreestring'];
+        
+        print tree
+
         dates=""
         if 'inputdate' in request.FILES and request.POST['datesornot']=="yes":
             dates=LSDRunParser.parseFile(request.FILES['inputdate']);
 
-        rates=""
-        if 'substrates' in request.FILES:
-            rates=LSDRunParser.parseFile(request.FILES['substrates']);
-            
+        rate=request.POST.get('substrate','None')
+        if rate != 'None' and rate != '' :
+            print "RATE:"+rate
+            substrate=float(rate)
+        else:
+            substrate=-1
+
+        outgroup = request.POST.get("outgroupornot")=="yes"
+
         outgroups=""
-        if 'outgroups' in request.FILES:
-            outgroups=LSDRunParser.parseFile(request.FILES['outgroups']);
+        # if 'outgroups' in request.FILES:
+        #     outgroups=LSDRunParser.parseFile(request.FILES['outgroups']);
                     
         if request.POST['rootdate'] == '':
             rootdate=-1
@@ -62,24 +70,16 @@ class LSDRunParser:
             run_variance         = request.POST.get('variancesornot', False),
             run_seq_length       = seqlength,
             run_param_variance   = varianceparam,
-            run_rooting_method   = request.POST['estimateroot'],
+            run_rooting_method   = "no" if outgroup else request.POST['estimateroot'],
             run_rate_lower_bound = lowboundrate)
         r.save()
-                                        
-        substrates=rates.splitlines()
-                                      
+
         with transaction.atomic():
-            index=0
-            for tree in tree.splitlines():
-                substrate = -1
-                if(len(substrates)>index):
-                    substrate = substrate[index]
-                r.runtrees_set.create(
-                    tree_newick     = tree,
-                    tree_index      = index,
-                    tree_subst_rate = float(substrate)
-                )
-                index+=1
+            r.runtrees_set.create(
+                tree_newick     = tree,
+                tree_index      = 0,
+                tree_subst_rate = substrate
+            )
 
         with transaction.atomic():
             index = 0

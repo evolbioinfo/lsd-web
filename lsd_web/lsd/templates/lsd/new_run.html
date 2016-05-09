@@ -5,16 +5,18 @@
 
 <ul class="nav nav-tabs">
   <li class="active"><a href="#trees" aria-controls="trees" role="tab" data-toggle="tab">Input tree(s)</a></li>
-  <li><a href="#options" aria-controls="options" role="tab" data-toggle="tab">Options</a></li>
 </ul>
 
 <form action="{% url 'lsd:submit_run' %}" method="post" enctype="multipart/form-data" id="newrunform">
+  <input type="hidden" name="constraints" id="constraints" value="True"/>
+  <input type="hidden" name="variancesornot" id="variances" value="False"/>
+  <input type="hidden" name="varianceparam" id="varianceparam" value="10" />
+  <input type="hidden" name="seqlength" id="seqlength" value="1000" />
+  <input type="hidden"  name="lowboundrate" id="lowboundrate" value="0.000010" />
+  <input type="hidden"  name="inputtreestring" id="inputtreestring" value="" />
+
 {% csrf_token %}
-
-<div id="errordiv">
-
-</div>
-
+  
 <!-- Tab panes -->
 <div class="tab-content">
   <div role="tabpanel" class="tab-pane active" id="trees">
@@ -22,7 +24,13 @@
       <label for="inputtree" class="col-sm-2 form-control-label">Choose input tree file</label>
       <div class="col-sm-10">
 	<input type="file" class="form-control-file" id="inputtree" name="inputtree" />
-	<small class="text-muted">The input file may contain one or several trees in newick format</small>
+	<small class="text-muted">The input file may contain one tree in newick format. If several trees are given, only the first is analyzed</small>
+	<div class="alert alert-danger fade in" id="treeerror" style="display:none;">
+	  <span id="treeerrortext"></span>
+	</div>
+	<div class="alert alert-success fade in" id="treesuccess" style="display:none;">
+	  <span id="treesuccesstext"></span>
+	</div>
       </div>
     </div>
     <div class="form-group row" id="treeinfo" style="display:none;">
@@ -50,22 +58,29 @@
 	</div>
 	<fieldset class="form-group">
 	  <div id="nooutgroup">
+	    Estimate the root:
+	    <select name="estimateroot" class="c-select" id="estimaterootselect">
+	    </select>
 	  </div>
 	  <div id="yesoutgroup">
 	    Enter one species of the outgroup
-	    <form>
-	      <input type="text" id="taxon" />
-	      <ul class="list-group" id="alltaxalist">
-	      </ul>
-	      <input type="button" class="btn btn-primary" id="getancestor" value="More Taxa"/>
-	      <input type="button" class="btn btn-success" id="reroottree" value="Reroot Tree"/>
-	      <input type="button" class="btn btn-danger" id="clearoutgroup" value="Clear Outgroup"/>
-	    </form>
+	    <input type="text" id="taxon" />
+	    <ul class="list-group" id="alltaxalist">
+	    </ul>
+	    <input type="button" class="btn btn-primary" id="getancestor" value="More Taxa"/>
+	    <input type="button" class="btn btn-success" id="reroottree" value="Reroot Tree"/>
+	    <input type="button" class="btn btn-danger" id="clearoutgroup" value="Clear Outgroup"/>
+	    <div class="alert alert-danger fade in" id="outgrouperror" style="display:none;">
+	      <span id="outgrouperrortext"></span>
+	    </div>
+	    <div class="alert alert-success fade in" id="outgroupsuccess" style="display:none;">
+	      <span id="outgroupsuccesstext"></span>
+	    </div>
 	  </div>
 	</fieldset>
-
       </div>
     </div>
+
     <div class="form-group row">
       <label for="inputtree" class="col-sm-2 form-control-label">Date information      
 	<small class="text-muted">You can enter a date file or just root date and tips date</small>
@@ -103,66 +118,16 @@
 	</fieldset>
       </div>
     </div>
-  </div>
-
-  <div role="tabpanel" class="tab-pane" id="options">
 
     <div class="form-group row">
-      <label class="col-sm-2">Constraints</label>
+      <label class="col-sm-2 form-control-label">Substitution rate</label>
       <div class="col-sm-10">
-        <input type="checkbox" name="constraints" id="constraints" > With constraints
-      </div>
-    </div>
-
-    <div class="form-group row">
-      <label class="col-sm-2">Low bound for the rate</label>
-      <div class="col-sm-10">
-	<input type="text" class="form-control" name="lowboundrate" id="lowboundrate" placeholder="0.000010">
-      </div>
-    </div>
-
-    <div class="form-group row">
-      <label class="col-sm-2">Variances</label>
-      <div class="col-sm-10">
-        <input type="checkbox" data-target="div#yesvariances" data-toggle="radio-collapse" name="variancesornot" id="variances" > With variances
-	<fieldset class="form-group">
-	  <div id="yesvariances">
-	    Parameter of variance <input type="text" class="form-control" name="varianceparam" id="varianceparam" placeholder="10">
-	    Sequence Length <input type="text" class="form-control" name="seqlength" id="seqlength" placeholder="1000">
-	  </div>
-	</fieldset>
-      </div>
-    </div>
-
-    <div class="form-group row">
-      <label class="col-sm-2">Estimate the root</label>
-      <div class="col-sm-10">
-	<select name="estimateroot" class="c-select">
-	  <option value="no" selected>No</option>
-	  <option value="l">Around the given root</option>
-	  <option value="a">Searches on all branches</option>
-	</select>
-      </div>
-    </div>
-
-    <div class="form-group row">
-      <label class="col-sm-2 form-control-label">Substitution rates</label>
-      <div class="col-sm-10">
-	<input type="file" class="form-control-file" id="substrates" name="substrates" />
-	<small class="text-muted">The input file should contain one line per rate (one rate per input tree)</small>
-      </div>
-    </div>
-
-    <div class="form-group row">
-      <label class="col-sm-2 form-control-label">Outgroups</label>
-      <div class="col-sm-10">
-	<input type="file" class="form-control-file" id="outgroups" name="outgroups" />
-	<small class="text-muted">Will root the tree using an outgroup.The input file should contain one line per taxon. It must be monophyletic</small>
+	<input type="text" class="form-control" id="substrate" name="substrate" placeholder="None"/>
+	<small class="text-muted"> rate: If you have one, you may enter a substitution rate for the tree</small>
       </div>
     </div>
   </div>
 </div>
-
 
 <button type="submit" class="btn btn-primary">Run LSD</button>
 </form>
