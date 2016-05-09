@@ -761,43 +761,41 @@ function init_tree_reader(){
 		    $("#estimaterootselect").empty();
 		    $("#estimaterootselect").append("<option value=\"a\">Searches on all branches</option>");
 		}
-		$('#taxon').autocomplete({
-		    source : get_taxas_string(input_tree),
-		});
 		
-		$('#taxon').on("autocompletechange", function(event, ui){
-		    // console.log(ui.item.value);
-		    // $("#alltaxalist").empty();
-		    if(ui.item == null){
-			return;
-		    }
-		    $("#alltaxalist").prepend('<li class="list-group-item">' + ui.item.value + '</li>');
+		var taxa = get_taxas_string(input_tree);
+		var i;
+		$("#taxon").empty();
+		for(i = 0;i < taxa.length; i++){
+		    $("#taxon").append("<option value=\""+taxa[i]+"\">"+taxa[i]+"</option>");
+		}
+		$("#taxon").trigger("chosen:updated");
+		
+		$("#taxon").chosen().change(function(){
 		    var tax = [];
-		    $("#alltaxalist li").each(function(){
-			tax.push($(this).text());
+		    $( "#taxon option:selected").each(function() {
+			tax.push($( this ).text());
 		    });
-		    var taxnodes = node_from_taxnames(input_tree,tax);
-		    if(taxnodes.length==1){
-			$("#alltaxalist").empty();
-			outgroup_ancestor = taxnodes[0];
-			$("#alltaxalist").prepend('<li class="list-group-item">' + taxnodes[0].tax + '</li>');
-		    }else if(taxnodes.length > 1){
-			outgroup_ancestor = get_ancestor(taxnodes);
-			$("#alltaxalist").empty();
-			var i;
-			var alltaxa = get_taxas(outgroup_ancestor);
-			for(i=0; i< alltaxa.length; i++){
-			    $("#alltaxalist").prepend('<li class="list-group-item">' + alltaxa[i].tax + '</li>');
+		    if(tax.length>0){
+			var taxnodes = node_from_taxnames(input_tree,tax);
+			if(tax.length==1){
+			    outgroup_ancestor = taxnodes[0];
+			}else{
+			    outgroup_ancestor = get_ancestor(taxnodes);
+			    var alltaxa = get_taxas(outgroup_ancestor);
+			    for(i=0; i< alltaxa.length; i++){
+				console.log(alltaxa[i].tax);
+				$( "#taxon option[value="+alltaxa[i].tax+"]").prop('selected', true)
+			    }
 			}
 		    }
-		    if(outgroup_ancestor != null){
-			console.log(to_newick(outgroup_ancestor));
-		    }
+		    $("#taxon").trigger("chosen:updated");
 		});
 
 		$('#clearoutgroup').click(function(){
-		    $("#alltaxalist").empty();
-		    $("#taxon").val("");
+		    $( "#taxon option").each(function() {
+			$(this).prop('selected',false);
+		    });
+		    $("#taxon").trigger("chosen:updated");
 		    outgroup_ancestor = null;
 		});
 		
@@ -805,13 +803,12 @@ function init_tree_reader(){
 		    if(outgroup_ancestor != null){
 			if(outgroup_ancestor != input_tree){
 			    outgroup_ancestor = outgroup_ancestor.parent;
-			    console.log(to_newick(outgroup_ancestor));
 			    var tax = get_taxas(outgroup_ancestor);
 			    var i;
-			    $("#alltaxalist").empty();
 			    for(i=0; i < tax.length;i++){
-				$("#alltaxalist").prepend('<li class="list-group-item">' + tax[i].tax + '</li>');
+				$( "#taxon option[value="+tax[i].tax+"]").prop('selected', true)
 			    }
+			    $("#taxon").trigger("chosen:updated");
 			}else{
 			    outgrouperror("Cannot get more taxa, outgroup is already the whole tree");
 			}
@@ -828,9 +825,14 @@ function init_tree_reader(){
 			    $("#alltaxalist").empty();
 			    $('#taxon').val("");
 			    input_tree = reroot_from_outgroup(input_tree, tax, true);
-			    $('#taxon').autocomplete({
-				source : get_taxas_string(input_tree),
-			    });
+			    
+			    var newtax = get_taxas(input_tree);
+			    $("#taxon").empty();
+			    for(i = 0;i < newtax.length; i++){
+				$("#taxon").append("<option value=\""+newtax[i].tax+"\">"+newtax[i].tax+"</option>");
+			    }
+			    $("#taxon").trigger("chosen:updated");
+
 			    outgroup_ancestor = null;
 			    console.log(to_newick(input_tree));
 			    $("#inputtreestring").val(to_newick(input_tree));
@@ -923,10 +925,24 @@ tree3 = reroot_from_outgroup(tree3, n, true);
 print(to_newick(tree3));
 */
 
+function init_chosen(){
+    var config = {
+	'.chosen-select'           : {},
+	'.chosen-select-deselect'  : {allow_single_deselect:true},
+	'.chosen-select-no-single' : {disable_search_threshold:10},
+	'.chosen-select-no-results': {no_results_text:'Oops, no taxa found!'},
+	'.chosen-select-width'     : {width:"95%"}
+    }
+    for (var selector in config) {
+	$(selector).chosen(config[selector]);
+    }
+}
+
 $(document).ready(function(){
     init_canvas();
 
     init_tree_reader();
-    
+
+    init_chosen();
 });
 
