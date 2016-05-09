@@ -4,6 +4,11 @@ var caches= [];
 var input_tree;
 var outgroup_ancestor = null;
 
+function NewickException(message) {
+   this.message = message;
+   this.name = "NewickException";
+}
+
 function delete_zero_length_branches(treejson){
     var childs = [];
     for(var n=0;n<treejson.suc.length;n++){
@@ -61,6 +66,9 @@ function parse_newick(newick_str, curnode, pos, level){
     while(pos < newick_str.length){
 	var matchDate = newick_str.substr(pos).match(/^\[&date=(\d+(\.\d+){0,1})\]/);
 	var matchBrlen = newick_str.substr(pos).match(/^\:(\d+(\.\d+){0,1}(e-\d+){0,1})/);
+	if(pos==0 && newick_str.substr(pos,1) != "("){
+	    throw new NewickException("Newick file does not start with a \"(\" (Maybe not a Newick file?)");
+	}
 	if(newick_str.substr(pos,1) == "("){
 	    //console.log("pos "+pos+" new node (");
 	    //id++;
@@ -74,6 +82,10 @@ function parse_newick(newick_str, curnode, pos, level){
 	} else if(newick_str.substr(pos,1) == ")"){
 	    //console.log("pos "+pos+" End Node )");
 	    pos++;
+	    // console.log("): level: "+(level-1))
+	    if((level-1)<0){
+		throw new NewickException("Mismatched parentheses in Newick File (Maybe not a Newick file?)");
+	    }
 	    return(pos);
 	} else if(newick_str.substr(pos,1) == ","){
 	    //console.log("pos "+pos+" Next Node ,");
@@ -95,12 +107,16 @@ function parse_newick(newick_str, curnode, pos, level){
 	    }
 	    pos+=matchBrlen[0].length;
 	} else if(newick_str.substr(pos,1) == ";"){
-	    //console.log("pos "+pos+" End tree");
+	    // console.log("pos "+pos+" End tree"+" level: "+level);
+	    if(level!=0){
+		throw new NewickException("Mismatched parentheses in Newick File (Maybe not a Newick file?)");
+	    }
 	    pos++;
+	    return(pos);
 	} else {
-	    //console.log(" --> Taxon ?");
+	    // console.log(" --> Taxon ?");
 	    var match = newick_str.substr(pos).match(/^([^(\[\]\(\)\:;\,)]*)/);
-	    // console.log(match[0]);
+	    // console.log(match[0]+" "+match[1]);
 	    var lastnode = new_node(curnode);
 	    lastnode.suc = [];
 	    lastnode.tax = match[1];
@@ -112,6 +128,7 @@ function parse_newick(newick_str, curnode, pos, level){
 	    pos += match[0].length;
 	}
     }
+    throw new NewickException("Reached end of file without a \";\"");
 }
 
 function reroot_from_outgroup(tree, outgroup, deleteoutgroup){
@@ -721,87 +738,107 @@ function init_tree_reader(){
 	var inputFile = inputFiles[0];
 	var reader = new FileReader();
 	reader.onload = function(event) {
-	    input_tree = new_node(null);
-	    parse_newick(event.target.result,input_tree,0,0);
-	    $("#treeinfo").show();	    
-	    if(is_rooted(input_tree)){
-		$("#rootedtreediv").show();
-		$("#unrootedtreediv").hide();
-	    }else{
-		$("#unrootedtreediv").show();
-		$("#rootedtreediv").hide();		
-	    }
-	    $('#taxon').autocomplete({
-		source : get_taxas_string(input_tree),
-	    });
-
-	    $('#taxon').on("autocompletechange", function(event, ui){
-		// console.log(ui.item.value);
-		// $("#alltaxalist").empty();
-		if(ui.item == null){
-		    return;
+	    try {
+		$('#errordiv').text("");
+		input_tree = new_node(null);
+		parse_newick(event.target.result,input_tree,0,0);
+		// console.log(to_newick(input_tree));
+		$("#treeinfo").show();	    
+		if(is_rooted(input_tree)){
+		    $("#rootedtreediv").show();
+		    $("#unrootedtreediv").hide();
+		}else{
+		    $("#unrootedtreediv").show();
+		    $("#rootedtreediv").hide();		
 		}
-		$("#alltaxalist").prepend('<li class="list-group-item">' + ui.item.value + '</li>');
-		var tax = [];
-		$("#alltaxalist li").each(function(){
-		    tax.push($(this).text());
+		$('#taxon').autocomplete({
+		    source : get_taxas_string(input_tree),
 		});
-		var taxnodes = node_from_taxnames(input_tree,tax);
-		if(taxnodes.length==1){
-		    $("#alltaxalist").empty();
-		    outgroup_ancestor = taxnodes[0];
-		    $("#alltaxalist").prepend('<li class="list-group-item">' + taxnodes[0].tax + '</li>');
-		}else if(taxnodes.length > 1){
-		    outgroup_ancestor = get_ancestor(taxnodes);
-		    $("#alltaxalist").empty();
-		    var i;
-		    var alltaxa = get_taxas(outgroup_ancestor);
-		    for(i=0; i< alltaxa.length; i++){
-			$("#alltaxalist").prepend('<li class="list-group-item">' + alltaxa[i].tax + '</li>');
+		
+		$('#taxon').on("autocompletechange", function(event, ui){
+		    // console.log(ui.item.value);
+		    // $("#alltaxalist").empty();
+		    if(ui.item == null){
+			return;
 		    }
-		}
-		if(outgroup_ancestor != null){
-		    console.log(to_newick(outgroup_ancestor));
-		}
-	    });
-
-	    $('#clearoutgroup').click(function(){
-		$("#alltaxalist").empty();
-		$("#taxon").val("");
-		outgroup_ancestor = null;
-	    });
-	    
-	    $('#getancestor').click(function(){
-		if(outgroup_ancestor != null){
-		    outgroup_ancestor = outgroup_ancestor.parent;
-		    console.log(to_newick(outgroup_ancestor));
-		    var tax = get_taxas(outgroup_ancestor);
-		    var i;
-		    $("#alltaxalist").empty();
-		    for(i=0; i < tax.length;i++){
-			$("#alltaxalist").prepend('<li>' + tax[i].tax + '</li>');
-		    }
-		}
-	    });
-
-	    $('#reroottree').click(function(){
-		if(outgroup_ancestor != null){
-		    $("#alltaxalist").empty();
-		    $('#taxon').val("");
-		    var tax = get_taxas(outgroup_ancestor);
-		    input_tree = reroot_from_outgroup(input_tree, tax, true);
-		    $('#taxon').autocomplete({
-			source : get_taxas_string(input_tree),
+		    $("#alltaxalist").prepend('<li class="list-group-item">' + ui.item.value + '</li>');
+		    var tax = [];
+		    $("#alltaxalist li").each(function(){
+			tax.push($(this).text());
 		    });
+		    var taxnodes = node_from_taxnames(input_tree,tax);
+		    if(taxnodes.length==1){
+			$("#alltaxalist").empty();
+			outgroup_ancestor = taxnodes[0];
+			$("#alltaxalist").prepend('<li class="list-group-item">' + taxnodes[0].tax + '</li>');
+		    }else if(taxnodes.length > 1){
+			outgroup_ancestor = get_ancestor(taxnodes);
+			$("#alltaxalist").empty();
+			var i;
+			var alltaxa = get_taxas(outgroup_ancestor);
+			for(i=0; i< alltaxa.length; i++){
+			    $("#alltaxalist").prepend('<li class="list-group-item">' + alltaxa[i].tax + '</li>');
+			}
+		    }
+		    if(outgroup_ancestor != null){
+			console.log(to_newick(outgroup_ancestor));
+		    }
+		});
+
+		$('#clearoutgroup').click(function(){
+		    $("#alltaxalist").empty();
+		    $("#taxon").val("");
 		    outgroup_ancestor = null;
-		    console.log(to_newick(input_tree));
-		}
-	    });
-	    
-        };
+		});
+		
+		$('#getancestor').click(function(){
+		    if(outgroup_ancestor != null){
+			if(outgroup_ancestor != input_tree){
+			    outgroup_ancestor = outgroup_ancestor.parent;
+			    console.log(to_newick(outgroup_ancestor));
+			    var tax = get_taxas(outgroup_ancestor);
+			    var i;
+			    $("#alltaxalist").empty();
+			    for(i=0; i < tax.length;i++){
+				$("#alltaxalist").prepend('<li>' + tax[i].tax + '</li>');
+			    }
+			}else{
+			    $("#errordiv").text("Cannot get more taxa, outgroup is already the whole tree");
+			}
+		    }else{
+			$("#errordiv").text("You should first select a Taxon");
+		    }
+		});
+		
+		$('#reroottree').click(function(){
+		    if(outgroup_ancestor != null){
+			if(outgroup_ancestor != input_tree){
+			    var tax = get_taxas(outgroup_ancestor);
+			    $("#alltaxalist").empty();
+			    $('#taxon').val("");
+			    input_tree = reroot_from_outgroup(input_tree, tax, true);
+			    $('#taxon').autocomplete({
+				source : get_taxas_string(input_tree),
+			    });
+			    outgroup_ancestor = null;
+			    console.log(to_newick(input_tree));
+			}else{
+			    $("#errordiv").text("Outgroup is the whole tree, won't reroot");
+			}
+		    }else{
+			$("#errordiv").text("No outgroup is defined");
+		    }
+		});
+		
+	    } catch (e) {
+		$('#errordiv').text("["+e.name+"] : " + e.message);
+		$("#newrunform")[0].reset();
+	    }
+	};
         reader.onerror = function(event) {
             $('#errordiv').text("Error opening file: " + event.target.error.code);
         };
+
         reader.readAsText(inputFile);
     });
 }

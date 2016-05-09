@@ -8,7 +8,7 @@
   <li><a href="#options" aria-controls="options" role="tab" data-toggle="tab">Options</a></li>
 </ul>
 
-<form action="{% url 'lsd:submit_run' %}" method="post" enctype="multipart/form-data">
+<form action="{% url 'lsd:submit_run' %}" method="post" enctype="multipart/form-data" id="newrunform">
 {% csrf_token %}
 
 <div id="errordiv">
