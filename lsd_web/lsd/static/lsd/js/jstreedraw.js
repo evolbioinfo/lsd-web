@@ -784,7 +784,7 @@ function init_tree_reader(){
 			    var alltaxa = get_taxas(outgroup_ancestor);
 			    for(i=0; i< alltaxa.length; i++){
 				console.log(alltaxa[i].tax);
-				$( "#taxon option[value="+alltaxa[i].tax+"]").prop('selected', true)
+				$( "#taxon option[value=\""+alltaxa[i].tax+"\"]").prop('selected', true)
 			    }
 			}
 		    }
@@ -806,7 +806,7 @@ function init_tree_reader(){
 			    var tax = get_taxas(outgroup_ancestor);
 			    var i;
 			    for(i=0; i < tax.length;i++){
-				$( "#taxon option[value="+tax[i].tax+"]").prop('selected', true)
+				$( "#taxon option[value=\""+tax[i].tax+"\"]").prop('selected', true)
 			    }
 			    $("#taxon").trigger("chosen:updated");
 			}else{
