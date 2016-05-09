@@ -810,7 +810,7 @@ function init_tree_reader(){
 			    var i;
 			    $("#alltaxalist").empty();
 			    for(i=0; i < tax.length;i++){
-				$("#alltaxalist").prepend('<li>' + tax[i].tax + '</li>');
+				$("#alltaxalist").prepend('<li class="list-group-item">' + tax[i].tax + '</li>');
 			    }
 			}else{
 			    outgrouperror("Cannot get more taxa, outgroup is already the whole tree");
