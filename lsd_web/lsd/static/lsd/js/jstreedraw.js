@@ -74,7 +74,6 @@ function parse_newick(newick_str, curnode, pos, level){
 	    throw new NewickException("Newick file does not start with a \"(\" (Maybe not a Newick file?)");
 	}
 	if(newick_str.substr(pos,1) == "("){
-	    //console.log("pos "+pos+" new node (");
 	    //id++;
 	    if(level==0){
 		pos = parse_newick(newick_str,curnode,pos+1,level+1);
@@ -773,6 +772,7 @@ function init_tree_reader(){
 		$("#taxon").trigger("chosen:updated");
 		
 		$("#taxon").chosen().change(function(){
+		    outgroup_ancestor = null;
 		    var tax = [];
 		    $( "#taxon option:selected").each(function() {
 			tax.push($( this ).text());
@@ -826,7 +826,8 @@ function init_tree_reader(){
 			    var tax = get_taxas(outgroup_ancestor);
 			    $("#alltaxalist").empty();
 			    $('#taxon').val("");
-			    input_tree = reroot_from_outgroup(input_tree, tax, true);
+			    var remove_outgroup = $('#removeoutgroup').is(':checked');
+			    input_tree = reroot_from_outgroup(input_tree, tax, remove_outgroup);
 			    
 			    var newtax = get_taxas(input_tree);
 			    $("#taxon").empty();
