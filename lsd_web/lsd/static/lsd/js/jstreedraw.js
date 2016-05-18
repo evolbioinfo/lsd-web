@@ -755,11 +755,13 @@ function init_tree_reader(){
 		    $("#estimaterootselect").append("<option value=\"no\" selected>No</option>");
 		    $("#estimaterootselect").append("<option value=\"l\">Around the given root</option>");
 		    $("#estimaterootselect").append("<option value=\"a\">Searches on all branches</option>");
+		    $("#nooutgroupselect").show();
 		}else{
 		    $("#unrootedtreediv").show();
 		    $("#rootedtreediv").hide();		
 		    $("#estimaterootselect").empty();
-		    $("#estimaterootselect").append("<option value=\"a\">Searches on all branches</option>");
+		    $("#estimaterootselect").append("<option value=\"a\" selected>Searches on all branches</option>");
+		    $("#nooutgroupselect").hide();
 		}
 		
 		var taxa = get_taxas_string(input_tree);
