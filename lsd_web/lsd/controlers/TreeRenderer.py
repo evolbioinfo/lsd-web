@@ -83,7 +83,7 @@ class TreeRenderer:
         return("")
 
     @staticmethod
-    def renderNexus_own(nexusString,widthPx,pdf):
+    def renderNexus_own(nexusString,widthPx):
         treestring = "#NEXUS\nBegin trees;\ntree 1 = "+nexusString+"\nEnd;\n"
         nexusIO = Nexus.Nexus.Nexus(treestring)
         tempdir=tempfile.mkdtemp()
@@ -91,7 +91,7 @@ class TreeRenderer:
         for t in nexusIO.trees:
             TreeImage.render_png(t,widthPx,0,image_file)
         with open(image_file, "rb") as image:
-            encoded_string = base64.b64encode(image.read())
+            encoded_string = image.read()
             return(encoded_string)
         shutil.rmtree(tempdir)
         return("")

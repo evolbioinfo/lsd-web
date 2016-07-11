@@ -9,10 +9,7 @@ from lsd.controlers.UserManager import UserManager
 from lsd_forms import RegistrationForm
 from django.shortcuts import redirect
 from lsd.controlers.TreeJSON import TreeJSON
-from Bio import Phylo
-from Bio import Nexus
 import math
-
 
 # Create your views here.
 from django.http import HttpResponse
@@ -93,16 +90,15 @@ def check_run(request):
         treeData = []
         treeDateData = []
 
-        if 'pdf' in request.GET and (int)(request.GET['pdf'])<len( r.resulttree_set.all()):
-            t = r.resulttree_set.all()[(int)(request.GET['pdf'])]
-            imagehex64_2=TreeRenderer.renderNexus(t.result_nexus, 1200,True)
+        if 'png' in request.GET and (int)(request.GET['png'])<len( r.resulttree_set.all()):
+            t = r.resulttree_set.all()[(int)(request.GET['png'])]
+            imagehex64_2=TreeRenderer.renderNexus_own(t.result_nexus, 1200)
             res = HttpResponse(imagehex64_2)
-            res['Content-Type'] = 'application/pdf'
-            res['Content-Disposition'] = 'attachment; filename=tree.pdf'
+            res['Content-Type'] = 'image/png'
+            res['Content-Disposition'] = 'attachment; filename=tree.png'
             return res
 
         if 'json' in request.GET and (int)(request.GET['json'])<len(r.resulttree_set.all()):
-            print "COUCOU 2"
             t = r.resulttree_set.all()[(int)(request.GET['json'])]
             treestring = "#NEXUS\nBegin trees;\ntree 1 = "+t.result_nexus+"\nEnd;\n"
             nexusIO = Nexus.Nexus.Nexus(treestring)
@@ -113,12 +109,29 @@ def check_run(request):
             # res['Content-Disposition'] = 'attachment; filename=tree.json'
             return res
 
-        for t in r.resulttree_set.all():
-            #imagehex64=TreeRenderer.renderNewick(t.result_newick,400,False)
-            imagehex64_2=TreeRenderer.renderNexus_own(t.result_nexus, 1000,False)
+        if 'nexus' in request.GET and (int)(request.GET['nexus'])<len(r.resulttree_set.all()):
+            t = r.resulttree_set.all()[(int)(request.GET['nexus'])]
+            treestring = "#NEXUS\nBegin trees;\ntree 1 = "+t.result_nexus+"\nEnd;\n";
+            res = HttpResponse(treestring)
+            res['Content-Type'] = 'text/plain'
+            res['Content-Disposition'] = 'attachment; filename=tree.nexus'
+            return res
+
+        
+        if 'newick' in request.GET and (int)(request.GET['newick'])<len(r.resulttree_set.all()):
+            t = r.resulttree_set.all()[(int)(request.GET['newick'])]
+            treestring = t.result_nexus
+            res = HttpResponse(treestring)
+            res['Content-Type'] = 'text/plain'
+            # res['Content-Disposition'] = 'attachment; filename=tree.json'
+            return res
+        
+        # for t in r.resulttree_set.all():
+        #     #imagehex64=TreeRenderer.renderNewick(t.result_newick,400,False)
+        #     imagehex64_2=TreeRenderer.renderNexus_own(t.result_nexus, 1000,False)
             
-            #treeData.append(imagehex64)
-            treeDateData.append(imagehex64_2)
+        #     #treeData.append(imagehex64)
+        #     treeDateData.append(imagehex64_2)
 
         context = {
             'status'     : "Finished",
@@ -126,7 +139,7 @@ def check_run(request):
             'lsdrun'     : r,
             'trees'      : r.resulttree_set.all(),
             'treeimages' : treeData,
-            'treedateimages' : treeDateData,
+            #'treedateimages' : treeDateData,
             'output'     : r.run_out_message,
             'error'      : r.run_err_message,
             'jid'        : jid

@@ -18,7 +18,7 @@ class LSDRunParser:
     def parse(request):
         tree=request.POST['inputtreestring'];
         
-        print tree
+        # print tree
 
         dates=""
         if 'inputdate' in request.FILES and request.POST['datesornot']=="yes":
@@ -33,7 +33,8 @@ class LSDRunParser:
 
         outgroup = request.POST.get("outgroupornot")=="yes"
 
-        outgroups=""
+        outgroups= request.POST['outgrouplist']
+        print outgroups
         # if 'outgroups' in request.FILES:
         #     outgroups=LSDRunParser.parseFile(request.FILES['outgroups']);
                     
@@ -50,7 +51,7 @@ class LSDRunParser:
         if request.POST['varianceparam'] == '':
             varianceparam=-1
         else:
-            varianceparam=float(request.POST['varianceparam'])
+            varianceparam=int(request.POST['varianceparam'])
                     
         if request.POST['lowboundrate'] == '':
             lowboundrate=-1
@@ -60,13 +61,20 @@ class LSDRunParser:
         if request.POST['seqlength'] == '':
             seqlength = -1
         else:
-            seqlength = request.POST['seqlength']
-                    
+            seqlength = int(request.POST['seqlength'])
+
+        if request.POST['nb_samples'] == '':
+            nb_samples = 0
+        else:
+            nb_samples=int(request.POST['nb_samples'])
+
         r = LSDRun(
             run_date             = timezone.now(),
             run_root_date        = rootdate,
             run_tips_date        = tipsdate,
             run_constraints      = request.POST.get('constraints', False),
+            run_with_conf_int    = request.POST.get('with_conf_int', False),
+            run_nb_samples       = nb_samples,
             run_variance         = request.POST.get('variancesornot', False),
             run_seq_length       = seqlength,
             run_param_variance   = varianceparam,
@@ -96,12 +104,7 @@ class LSDRunParser:
                 index+=1
 
         with transaction.atomic():
-            index = 0
             for taxon in outgroups.splitlines():
-                if index == 0 :
-                    num = int(taxon)
-                else:
-                    r.runoutgroups_set.create(taxon_name=taxon)
-                index+=1
+                r.runoutgroups_set.create(taxon_name=taxon)
         r.save()
         return(r)

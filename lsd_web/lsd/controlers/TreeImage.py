@@ -113,7 +113,9 @@ class TreeImage:
             
     @staticmethod
     def parse_comment_date(node):
-        dateStr = re.sub("\[&date=(-{0,1}\d+(\.\d+){0,1})\]", r"\1", node.data.comment)
+        dateStr= "0"
+        if node.data.comment:
+            dateStr = re.sub("\[&date=(-{0,1}\d+(\.\d+){0,1})\]", r"\1", node.data.comment)
         return float(dateStr)
 
     @staticmethod

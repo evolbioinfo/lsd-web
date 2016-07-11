@@ -4,6 +4,47 @@ var caches= [];
 var input_tree;
 var outgroup_ancestor = null;
 
+
+// It drawText() to write
+// to its own canvas, and uses drawImage() for each call to the main canvas.
+// Initially created to test vertical text but you dont have to use that.
+// You can simplify it by editing `drawVertical`
+// If you do change it to draw normal lines of text, you'll have to also do some
+// width measurements (measureText, etc), to size the extra canvases correctly.
+
+// for laziness, font size will just be something we pass in
+function TextHorizontalCanvas(context, text, font,fontsize) {
+    this.text = text;
+    this.font = font;
+    this.fontsize = fontsize;
+    
+    // We need a new canvas for each instance of TextVerticalCanvas
+    this.tempCanvas = document.createElement('canvas');
+    this.tempCanvas.width = 300;
+    this.tempCanvas.height = 50;
+    this.tempCtx = this.tempCanvas.getContext('2d');
+    this.tempCtx.fillStyle = context.fillStyle;
+    this.tempCtx.font      = this.font;
+    this.tempCtx.textAlign = "left";
+    this.textWidth = this.tempCtx.measureText(this.text).width;
+
+    // This is lazy. In the real world it should be an invalidation,
+    // making the tempCanvas remeasure itself each time the text or font changed.
+    // But for the test this will do.
+    this.firstTime = true;
+}
+
+TextHorizontalCanvas.prototype.draw  = function(context, x, y) {
+    if (this.firstTime) {
+	//console.log("textw: "+this.textWidth+" - text: "+this.text+" - w: "+this.tempCanvas.width+" - h: "+this.tempCanvas.height+" - x : "+x+" - y: "+y);
+	// draw text onto the temporary context
+	this.tempCtx.font      = "10px Arial";
+	this.tempCtx.fillText(this.text, 0, this.fontsize);
+	this.firstTime = false;
+    }
+    context.drawImage(this.tempCanvas, x, y-this.fontsize+1);
+}
+
 function NewickException(message) {
    this.message = message;
    this.name = "NewickException";
@@ -37,6 +78,8 @@ function new_node(parentNode){
     return {parent:parentNode,
 	    suc : [],
 	    date_n : 0,
+	    date_min:0,
+	    date_max:0,
 	    date_s : "",
 	    brlen : 0,
 	    tax : ""}
@@ -63,6 +106,8 @@ function parse_newick(newick_str, curnode, pos, level){
     curnode.suc = [];
     curnode.tax = "";
     curnode.date_s = "";
+    curnode.date_min = 0.0;
+    curnode.date_max = 0.0;
     curnode.date_n = 0.0;
     curnode.brlen = 0.0;
     var children = 0;
@@ -97,10 +142,25 @@ function parse_newick(newick_str, curnode, pos, level){
 	    //console.log(matchDate[0]+" "+matchDate[1]);
 	    if(level==0){
 		curnode.date_n = parseFloat(matchDate[1]);
+		curnode.date_min= curnode.date_n;
+		curnode.date_max= curnode.date_n;
 	    }else{
 		curnode.suc[children-1].date_n = parseFloat(matchDate[1]);
+		curnode.suc[children-1].date_min= curnode.suc[children-1].date_n;
+		curnode.suc[children-1].date_max= curnode.suc[children-1].date_n;
 	    }
 	    pos+=matchDate[0].length;
+	    var matchCI = newick_str.substr(pos).match(/^\[&CI=\"(\d+(\.\d+){0,1})\((\d+(\.\d+){0,1}),(\d+(\.\d+){0,1})\)\"\]/);
+	    if(matchCI != null){
+		if(level==0){
+		    curnode.date_min= parseFloat(matchCI[3]);
+		    curnode.date_max= parseFloat(matchCI[5]);
+		}else{
+		    curnode.suc[children-1].date_min= parseFloat(matchCI[3]);
+		    curnode.suc[children-1].date_max= parseFloat(matchCI[5]);
+		}
+		pos += matchCI[0].length;
+	    }
 	} else if(matchBrlen != null){
 	    // console.log(matchBrlen[0]);
 	    if(level == 0){
@@ -306,7 +366,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 
     for(var n = 0; n < cache.nodes.length;n++){
 	ctx.beginPath();
-	ctx.arc(cache.nodes[n].x * x_zoom + x_offset + cache.border, cache.nodes[n].y * y_zoom + y_offset + cache.border, cache.nodes[n].rad, 0,2*Math.PI);
+	ctx.arc(cache.nodes[n].x * x_zoom + x_offset, cache.nodes[n].y * y_zoom + y_offset, cache.nodes[n].rad, 0,2*Math.PI);
 	ctx.fillStyle = "#000000";
 	ctx.fill();
 	ctx.stroke();
@@ -314,8 +374,8 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 
     for(var l = 0; l < cache.lines.length; l++){
         ctx.beginPath();
-	ctx.moveTo(cache.lines[l].x1 * x_zoom + x_offset + cache.border,cache.lines[l].y1 * y_zoom + y_offset + cache.border);
-	ctx.lineTo(cache.lines[l].x2 * x_zoom + x_offset + cache.border,cache.lines[l].y2 * y_zoom + y_offset + cache.border);
+	ctx.moveTo(cache.lines[l].x1 * x_zoom + x_offset,cache.lines[l].y1 * y_zoom + y_offset);
+	ctx.lineTo(cache.lines[l].x2 * x_zoom + x_offset,cache.lines[l].y2 * y_zoom + y_offset);
 	ctx.strokeStyle= '#000000';
 	ctx.lineWidth=2;
 	ctx.lineCap = 'round';
@@ -326,7 +386,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
     // We draw a circle around the selected node
     if(cache.selected != null){
 	ctx.beginPath();
-	ctx.arc(cache.selected.x * x_zoom + x_offset + cache.border, cache.selected.y * y_zoom + y_offset + cache.border, 10, 0,2*Math.PI);
+	ctx.arc(cache.selected.x * x_zoom + x_offset, cache.selected.y * y_zoom + y_offset, 10, 0,2*Math.PI);
 	//ctx.fillStyle = "#000000";
 	ctx.strokeStyle= 'lightblue';
 	ctx.lineWidth=4;
@@ -335,34 +395,42 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
     }
     
     for(var t = 0; t < cache.texts.length; t++){
-	ctx.beginPath();
-	ctx.font = "10px Arial";
-	ctx.fillStyle = '#000000';
-	ctx.textAlign = "left";
-	text = cache.texts[t].text;
-	ctx.fillText(text,cache.texts[t].x * x_zoom - ctx.measureText(text).width - cache.texts[t].rad + x_offset + cache.border,cache.texts[t].y  * y_zoom - 2-cache.texts[t].rad + y_offset + cache.border);
+    	ctx.fillStyle = '#000000';
+	var text = cache.texts[t].text;
+	var txtctx;
+	if(! cache.text_ctx[t]){
+	    txtctx = new TextHorizontalCanvas(ctx, text, "10px Arial",10);
+	    cache.text_ctx[t] = txtctx;
+	}else{
+	    txtctx = cache.text_ctx[t];
+	}
+	txtctx.draw(ctx, cache.texts[t].x * x_zoom - txtctx.textWidth - cache.texts[t].rad + x_offset,cache.texts[t].y  * y_zoom - 2-cache.texts[t].rad + y_offset);
     }
 
     for(var l=0; l< cache.labels.length;l++){
-	ctx.beginPath();
-	ctx.font = "12px Arial";
-	ctx.fillStyle = '#000000';
-	ctx.textAlign = "left";
-	ctx.fillText(cache.labels[l].text,cache.labels[l].x * x_zoom + cache.labels[l].rad+2 + x_offset + cache.border,cache.labels[l].y * y_zoom + 2+y_offset + cache.border);
+	var text=cache.labels[l].text;
+	var txtctx;
+	if(! cache.label_ctx[l]){
+	    txtctx = new TextHorizontalCanvas(ctx, text, "12px Arial",12);
+	    cache.label_ctx[l] = txtctx;
+	}else{
+	    txtctx = cache.label_ctx[l];
+	}
+	txtctx.draw(ctx, cache.labels[l].x * x_zoom + cache.labels[l].rad+2 + x_offset,cache.labels[l].y * y_zoom + 2+y_offset);
     }
 
     for(var sl = 0; sl < cache.scale_lines.length; sl++){
-	// We draw the scale line
-	ctx.beginPath();
-	ctx.setLineDash([4, 4]);
-	ctx.moveTo(cache.scale_lines[sl].x1 * x_zoom + x_offset + cache.border, cache.scale_lines[sl].y1);// * y_zoom + y_offset);
-	ctx.lineTo(cache.scale_lines[sl].x2 * x_zoom + x_offset + cache.border, cache.scale_lines[sl].y2);// * y_zoom + y_offset);
-	ctx.strokeStyle= 'grey';
-	ctx.lineWidth=1;
-	ctx.lineCap = 'round';
-	ctx.lineJoin= 'round';
-	ctx.stroke();
-	ctx.setLineDash([]);
+    	// We draw the scale line
+    	ctx.beginPath();
+    	ctx.setLineDash([4, 4]);
+    	ctx.moveTo(cache.scale_lines[sl].x1 * x_zoom + x_offset, cache.scale_lines[sl].y1);// * y_zoom + y_offset);
+    	ctx.lineTo(cache.scale_lines[sl].x2 * x_zoom + x_offset, cache.scale_lines[sl].y2);// * y_zoom + y_offset);
+    	ctx.strokeStyle= 'grey';
+    	ctx.lineWidth=1;
+    	ctx.lineCap = 'round';
+    	ctx.lineJoin= 'round';
+    	ctx.stroke();
+    	ctx.setLineDash([]);
     }
 
     for(var st = 0; st < cache.scale_texts.length; st++){
@@ -371,7 +439,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	ctx.font = "10px Arial";
 	ctx.fillStyle = 'grey';
 	ctx.textAlign = "left";
-	ctx.fillText(cache.scale_texts[st].text,cache.scale_texts[st].x * x_zoom + x_offset + cache.border,cache.scale_texts[st].y);// * y_zoom + y_offset);
+	ctx.fillText(cache.scale_texts[st].text,cache.scale_texts[st].x * x_zoom + x_offset,cache.scale_texts[st].y);// * y_zoom + y_offset);
     }
 }
 
@@ -390,8 +458,8 @@ function date_layout(cache, tree, width, height){
     var tree_border=0;
     var canvas_border=40;
     var min_y=tree_border;
-    var curheight=height-2*canvas_border;
-    var curwidth= width-2*canvas_border;
+    var curheight=height-2 * canvas_border;
+    var curwidth= width -2 * canvas_border;
     var max_y=curheight-tree_border;
     var max_num_disp_years=25;
     var root = tree;
@@ -413,11 +481,12 @@ function date_layout(cache, tree, width, height){
     cache.y_zoom = true;
     cache.index = new SpatialIndex(width,height);
     cache.selected = null;
+    cache.text_ctx = [];
+    cache.label_ctx = [];
     cache.border = canvas_border;
-    
-    cache_y_coords(y_dict,root, curheight, tree_border, 0, total_terminals);
-    cache_scale(cache,min_date,max_date,width,height,tree_border,max_num_disp_years);
-    cache_coordinates(cache,root.id,root,y_dict,min_date,max_date,width,0,0,tree_border,point_radius);
+    cache_y_coords(y_dict,root, height, canvas_border, 0, total_terminals);
+    cache_scale(cache,min_date,max_date,width,height,canvas_border,max_num_disp_years);
+    cache_coordinates(cache,root.id,root,y_dict,min_date,max_date,width,0,0,canvas_border,point_radius);
 }
 
 function count_terminals(node){
@@ -435,9 +504,9 @@ function count_terminals(node){
 }
 
 function tree_min_date(node){
-    var mind = node.date_n
+    var mind = node.date_min
     if(node.suc.length==0){
-	mind = node.date_n
+	mind = node.date_min
     }else{
 	for(var n=0; n<node.suc.length;n++){
 	    mind = Math.min(mind,tree_min_date(node.suc[n]))
@@ -447,9 +516,9 @@ function tree_min_date(node){
 }
 
 function tree_max_date(node){
-    var maxd = node.date_n
+    var maxd = node.date_max
     if(!node || !node.suc || node.suc.length==0){
-	maxd = node.date_n
+	maxd = node.date_max
     }else{
 	for(var n=0; n<node.suc.length;n++){
 	    maxd = Math.max(maxd,tree_max_date(node.suc[n]));
@@ -479,7 +548,8 @@ function cache_coordinates(cache, root_id,node,y_dict,min_date,max_date,width,pr
     var middle=y_dict[node.id]
     //On ajoute les lignes verticales precedentes si non root
     // On prend la date et on calcul la position x
-    var x_coord= (node.date_n-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
+    var x_coord= (node.date_n-min_date) * (width-2*border) * 1.0 / (max_date-min_date) + border
+
     
     // On affiche le noeud
     cache.nodes.push({"x" : x_coord,"y":middle, "rad": point_radius});
@@ -523,7 +593,7 @@ function cache_scale(cache, min_date,max_date,width,height,border,max_num_disp_y
     var mod= Math.ceil((max_year-min_year)*1.0/max_num_disp_years)
     for(var year=min_year; year<=max_year; year++){
         if (year%mod==0){
-            var x_coord= (year-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
+            var x_coord= (year-min_date) * (width-2*border) * 1.0 / (max_date-min_date) + border
 	    cache.scale_lines.push({"x1": x_coord, "y1": 0,"x2" : x_coord, "y2": height});
 	    cache.scale_texts.push({"text": year,"x": x_coord, "y": 10});
 	}
@@ -531,6 +601,7 @@ function cache_scale(cache, min_date,max_date,width,height,border,max_num_disp_y
 }
 
 function init_canvas(){
+    
     $('.canvaswrapper').each(function(index,item){
 	var height=500;
 	var width=1000;
@@ -573,6 +644,7 @@ function init_canvas(){
 		y_offset = check_offset(y_offset, height, y_zoom);
 		x_offset = check_offset(x_offset, $(canvas).width(), x_zoom);
 		update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
+		e.preventDefault();
 	    }
 	});
 
@@ -584,12 +656,20 @@ function init_canvas(){
 		y_speed = 0;
 		x_speed = 0;
 	    }
+
+	    // For the zoom to be centered on the middle of the canvas
+	    var oldheight = y_zoom*height;
+	    var oldwidth = x_zoom*$(canvas).width();
+	    var y_offsetfactor = (-y_offset+height/2)/(y_zoom*height);
+	    var x_offsetfactor = (-x_offset+height/2)/(x_zoom*height);
+	    
+	    // Zoom factor
 	    if(e.originalEvent.deltaY > 0){
-		x_zoom -= 0.5;
-		y_zoom -= 0.5;
+		x_zoom -= 1;
+		y_zoom -= 1;
 	    }else{
-		x_zoom += 0.5;
-		y_zoom += 0.5;
+		x_zoom += 1;
+		y_zoom += 1;
 	    }
 	    if(x_zoom < 1){
 		x_zoom = 1;
@@ -597,6 +677,14 @@ function init_canvas(){
 	    if(y_zoom < 1){
 		y_zoom = 1;
 	    }
+	    
+	    // For the zoom to be centered on the middle
+	    var newheight = y_zoom*height;
+	    var newwidth  = x_zoom*$(canvas).width();
+	    y_offset -= (newheight-oldheight)*y_offsetfactor;
+	    x_offset -= (newwidth-oldwidth)*x_offsetfactor;
+	    
+	    // Update Canvas
 	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 	    e.preventDefault();
 	});
@@ -635,15 +723,12 @@ function init_canvas(){
 	    }
 	    x_offset = check_offset(x_offset, $(canvas).width(), zx);
 	    y_offset = check_offset(y_offset, height, zy);
-	    //console.log((e.offsetX)+" "+(e.offsetY)+" "+caches[index].x_zoom+" "+x_offset+" "+y_offset);
-	    //console.log(Math.floor((e.offsetX - x_offset)*1.0/zx)+" "+ Math.floor((e.offsetY - y_offset)*1.0/zy));
-	    nodes = caches[index].index.get_nodes(Math.floor((e.offsetX - x_offset - caches[index].border)*1.0/zx), Math.floor((e.offsetY - y_offset - caches[index].border)*1.0/zy),5);
+	    nodes = caches[index].index.get_nodes(Math.floor((e.offsetX - x_offset)*1.0/zx), Math.floor((e.offsetY - y_offset)*1.0/zy),5);
 	    if(nodes.length == 0){
 		caches[index].selected = null;
 		$(canvas).trigger("node:unselected");
 	    }else{
 		for(i = 0; i < nodes.length; i++){
-		    //console.log("Found node : "+nodes[i].node.date_n+" : "+nodes[i].node.brlen+" : ("+nodes[i].node.tax+")");
 		    caches[index].selected = nodes[i];
 		}
 		$(canvas).trigger("node:selected",[caches[index].selected.node]);
@@ -651,8 +736,8 @@ function init_canvas(){
 	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 	});
 	
-	if(canvas.hasAttribute('data-url')){
-	    var tree_url=$(canvas).data('url');
+	if(canvas.hasAttribute('data-json-url')){
+	    var tree_url=$(canvas).data('json-url');
 	    $.ajax({
 		url: tree_url,
 		type: 'GET',
@@ -663,7 +748,24 @@ function init_canvas(){
 		    caches[index] = {};
 		    date_layout(caches[index], trees[index], $(canvas).width(),height);
 		    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
-		    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
+		}
+	    });
+	} else if(canvas.hasAttribute('data-newick-url')){
+	    var tree_url=$(canvas).data('newick-url');
+	    $.ajax({
+		url: tree_url,
+		type: 'GET',
+		dataType: 'text',
+		success: function(code_newick,status){
+		    var treenewick = code_newick;
+		    var treejson = {};
+		    parse_newick(treenewick,treejson,0,0);
+		    delete_zero_length_branches(treejson);
+		    add_ids_to_json_tree(treejson,0);
+		    trees[index] = treejson;
+		    caches[index] = {};
+		    date_layout(caches[index], trees[index], $(canvas).width(),height);
+		    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
 		}
 	    });
 	} else if(canvas.hasAttribute('data-json')) {
@@ -673,7 +775,6 @@ function init_canvas(){
 	    date_layout(caches[index], trees[index], $(canvas).width(),height);
 	    delete_zero_length_branches(trees[index]);
 	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
-	    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
  	} else if (canvas.hasAttribute('data-newick')){
 	    var treenewick = $(canvas).data('newick');
 	    var treejson  = {};
@@ -685,7 +786,6 @@ function init_canvas(){
 	    caches[index] = {};
 	    date_layout(caches[index], trees[index], $(canvas).width(),height);
 	    update_canvas(caches[index], canvas, height, x_zoom, y_zoom, x_offset, y_offset);
-	    //draw_tree(canvas,trees[index],$(canvas).width(),height,zoom);
 	}
     });
 }
@@ -785,7 +885,6 @@ function init_tree_reader(){
 			    outgroup_ancestor = get_ancestor(taxnodes);
 			    var alltaxa = get_taxas(outgroup_ancestor);
 			    for(i=0; i< alltaxa.length; i++){
-				console.log(alltaxa[i].tax);
 				$( "#taxon option[value=\""+alltaxa[i].tax+"\"]").prop('selected', true)
 			    }
 			}
@@ -828,7 +927,22 @@ function init_tree_reader(){
 			    $('#taxon').val("");
 			    var remove_outgroup = $('#removeoutgroup').is(':checked');
 			    input_tree = reroot_from_outgroup(input_tree, tax, remove_outgroup);
+
+			    // Update outgroup list if ougroup is kept
+			    if(! remove_outgroup){
+				var outstring = "";
+				for(var ni = 0; ni< tax.length; ni++){
+				    if(ni>0){
+					outstring = outstring + "\n";
+				    }
+				    outstring = outstring+tax[ni].tax;
+				}
+				$("#outgrouplist").val(outstring);
+			    }else{
+				$("#outgrouplist").val("");
+			    }
 			    
+			    // Update taxon list in reroot div
 			    var newtax = get_taxas(input_tree);
 			    $("#taxon").empty();
 			    for(i = 0;i < newtax.length; i++){
@@ -836,8 +950,10 @@ function init_tree_reader(){
 			    }
 			    $("#taxon").trigger("chosen:updated");
 
+			    
 			    outgroup_ancestor = null;
-			    console.log(to_newick(input_tree));
+			    // Update Tree variable
+			    // console.log(to_newick(input_tree));
 			    $("#inputtreestring").val(to_newick(input_tree));
 			    outgroupsuccess("Tree succesfully rerooted");
 			}else{
@@ -896,37 +1012,6 @@ function treesuccess(message){
 	$(this).hide();
     });
 }
-
-
-/*
-var treejson  = {};
-parse_newick("((1:1,2:1):1,(3:1,4:1):1,(5:1,6:1):1);",treejson,0,0);
-print("Rooted: "+is_rooted(treejson));
-print(to_newick(treejson));
-treejson = reroot(treejson, treejson.suc[0]);
-print(to_newick(treejson));
-
-var tree2 = {};
-parse_newick("((1:1,2:1):1,((3:1,4:1):1,(5:1,6:1):1):1)",tree2,0,0);
-print("Rooted: "+is_rooted(tree2));
-print(to_newick(tree2));
-tree2 = reroot(tree2, tree2.suc[1]);
-print(to_newick(tree2));
-
-var tree3 = {};
-parse_newick("((1:1,2:1):1,((3:1,4:1):1,(5:1,6:1):1):1)",tree3,0,0);
-print("Rooted: ",is_rooted(tree3));
-n = node_from_taxnames(tree3, ["6","5"]);
-a = get_ancestor(n);
-t = get_taxas(a);
-for(k=0; k < t.length; k++){
-    print("Outgroup: "+t[k].tax);
-}
-
-print(to_newick(tree3));
-tree3 = reroot_from_outgroup(tree3, n, true);
-print(to_newick(tree3));
-*/
 
 function init_chosen(){
     var config = {
