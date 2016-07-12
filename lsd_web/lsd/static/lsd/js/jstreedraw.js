@@ -102,6 +102,7 @@ function to_newick_recur(tree){
     output += ")";
     return(output);
 }
+
 function parse_newick(newick_str, curnode, pos, level){
     curnode.suc = [];
     curnode.tax = "";
@@ -364,10 +365,23 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
     canvas.width  = cache.width;
     canvas.height = cache.height;
 
+    for(var n = 0; n < cache.ci_lines.length;n++){
+	ctx.beginPath();
+	ctx.moveTo(cache.ci_lines[n].x1 * x_zoom + x_offset,cache.ci_lines[n].y1 * y_zoom + y_offset);
+	ctx.lineTo(cache.ci_lines[n].x2 * x_zoom + x_offset,cache.ci_lines[n].y2 * y_zoom + y_offset);
+	ctx.strokeStyle= '#33c15f';
+	ctx.lineWidth=4;
+	ctx.lineCap = 'round';
+	ctx.lineJoin= 'round';
+	ctx.stroke();
+    }
+    
     for(var n = 0; n < cache.nodes.length;n++){
 	ctx.beginPath();
 	ctx.arc(cache.nodes[n].x * x_zoom + x_offset, cache.nodes[n].y * y_zoom + y_offset, cache.nodes[n].rad, 0,2*Math.PI);
 	ctx.fillStyle = "#000000";
+	ctx.strokeStyle= '#000000';
+	ctx.lineWidth=3;
 	ctx.fill();
 	ctx.stroke();
     }
@@ -469,8 +483,9 @@ function date_layout(cache, tree, width, height){
     var total_terminals=count_terminals(tree);
     var y_dict={};
 
-    cache.nodes = [];
-    cache.lines = [];
+    cache.nodes    = [];
+    cache.lines    = [];
+    cache.ci_lines = [];
     cache.scale_texts = [];
     cache.scale_lines = [];
     cache.labels = [];
@@ -487,6 +502,7 @@ function date_layout(cache, tree, width, height){
     cache_y_coords(y_dict,root, height, canvas_border, 0, total_terminals);
     cache_scale(cache,min_date,max_date,width,height,canvas_border,max_num_disp_years);
     cache_coordinates(cache,root.id,root,y_dict,min_date,max_date,width,0,0,canvas_border,point_radius);
+    cache_ci_coords(cache,root.id,root,y_dict,min_date,max_date,width,0,0,canvas_border,point_radius);
 }
 
 function count_terminals(node){
@@ -578,6 +594,25 @@ function cache_coordinates(cache, root_id,node,y_dict,min_date,max_date,width,pr
     // On passe aux suivants
     for(var n=0;n<node.suc.length;n++){
 	cache_coordinates(cache,root_id,node.suc[n],y_dict,min_date,max_date,width,x_coord,middle, border,point_radius)
+    }
+}
+
+function cache_ci_coords(cache, root_id,node,y_dict,min_date,max_date,width,prev_x,prev_y,border,point_radius){
+    var middle=y_dict[node.id]
+
+    //On ajoute les lignes verticales precedentes si non root
+    // On prend la date et on calcul la position x
+    var x_coord= (node.date_n-min_date) * (width-2*border) * 1.0 / (max_date-min_date) + border
+    var min_x_coord = (node.date_min-min_date) * (width-2*border) * 1.0 / (max_date-min_date) + border
+    var max_x_coord = (node.date_max-min_date) * (width-2*border) * 1.0 / (max_date-min_date) + border
+    //# On affiche la ligne horizontale
+    if(node.date_min<node.date_max){
+	cache.ci_lines.push({"x1":min_x_coord,"y1":middle,"x2":max_x_coord,"y2":middle});
+    }
+    
+    // On passe aux suivants
+    for(var n=0;n<node.suc.length;n++){
+	cache_ci_coords(cache,root_id,node.suc[n],y_dict,min_date,max_date,width,x_coord,middle, border,point_radius)
     }
 }
 
