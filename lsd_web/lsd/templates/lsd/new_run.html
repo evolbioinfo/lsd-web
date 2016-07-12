@@ -9,10 +9,9 @@
 
 <form action="{% url 'lsd:submit_run' %}" method="post" enctype="multipart/form-data" id="newrunform">
   <input type="hidden" name="constraints" id="constraints" value="True"/>
-  <input type="hidden" name="variancesornot" id="variances" value="False"/>
+  <input type="hidden" name="variancesornot" id="variances" value="True"/>
   <input type="hidden" name="outgrouplist" id="outgrouplist" value="" />
   <input type="hidden" name="varianceparam" id="varianceparam" value="10" />
-  <input type="hidden" name="seqlength" id="seqlength" value="1000" />
   <input type="hidden" name="nb_samples" id="nb_samples" value="10" />
   <input type="hidden"  name="lowboundrate" id="lowboundrate" value="0.000010" />
   <input type="hidden"  name="inputtreestring" id="inputtreestring" value="" />
@@ -141,6 +140,15 @@
 	<small class="text-muted"> rate: If you have one, you may enter a substitution rate for the tree</small>
       </div>
     </div>
+
+    <div class="form-group row">
+      <label class="col-sm-2 form-control-label">Sequence length</label>
+      <div class="col-sm-10">
+	<input type="text" class="form-control" name="seqlength" id="seqlength" value="1000" />
+	<small class="text-muted"> sequence length: Please enter the length of the sequences used to build the tree</small>
+      </div>
+    </div>
+    
   </div>
 </div>
 
