@@ -38,7 +38,7 @@ TextHorizontalCanvas.prototype.draw  = function(context, x, y) {
     if (this.firstTime) {
 	//console.log("textw: "+this.textWidth+" - text: "+this.text+" - w: "+this.tempCanvas.width+" - h: "+this.tempCanvas.height+" - x : "+x+" - y: "+y);
 	// draw text onto the temporary context
-	this.tempCtx.font      = "10px Arial";
+	this.tempCtx.font      = this.font;
 	this.tempCtx.fillText(this.text, 0, this.fontsize);
 	this.firstTime = false;
     }
@@ -410,10 +410,12 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
     
     for(var t = 0; t < cache.texts.length; t++){
     	ctx.fillStyle = '#000000';
+	ctx.strokeStyle = '#000000';
+	
 	var text = cache.texts[t].text;
 	var txtctx;
 	if(! cache.text_ctx[t]){
-	    txtctx = new TextHorizontalCanvas(ctx, text, "10px Arial",10);
+	    txtctx = new TextHorizontalCanvas(ctx, text, "12px Calibri",12);
 	    cache.text_ctx[t] = txtctx;
 	}else{
 	    txtctx = cache.text_ctx[t];
@@ -425,7 +427,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	var text=cache.labels[l].text;
 	var txtctx;
 	if(! cache.label_ctx[l]){
-	    txtctx = new TextHorizontalCanvas(ctx, text, "12px Arial",12);
+	    txtctx = new TextHorizontalCanvas(ctx, text, "12px Calibri",12);
 	    cache.label_ctx[l] = txtctx;
 	}else{
 	    txtctx = cache.label_ctx[l];
@@ -449,11 +451,44 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 
     for(var st = 0; st < cache.scale_texts.length; st++){
 	// We write the legend
-	ctx.beginPath();
-	ctx.font = "10px Arial";
+	ctx.font = "12px Calibri";
 	ctx.fillStyle = 'grey';
 	ctx.textAlign = "left";
 	ctx.fillText(cache.scale_texts[st].text,cache.scale_texts[st].x * x_zoom + x_offset,cache.scale_texts[st].y);// * y_zoom + y_offset);
+    }
+
+    
+    // We display informations about the selected node
+    if(cache.selected != null){
+	ctx.fillStyle = "#e8e6e6";
+	//ctx.strokeStyle= '#8f8d8d';
+	ctx.strokeStyle= '#000000';
+	ctx.lineWidth=1;
+	ctx.fillRect($(canvas).width()-170,height-60,$(canvas).width(),height);
+	ctx.font = "normal normal bolder 12px Calibri";
+	ctx.fillStyle = 'grey';
+	ctx.textAlign = "left";
+	if(cache.selected.node.suc.length==0){
+	    ctx.fillText("Taxon: "+cache.selected.node.tax,$(canvas).width()-168,height-60+12);// * y_zoom + y_offset);
+	}else{
+	    ctx.fillText("Internal Node",$(canvas).width()-168,height-60+12);// * y_zoom + y_offset);
+	}
+	var year  = Math.floor(cache.selected.node.date_n);
+	var month = cache.selected.node.date_n-year;
+	var month = Math.floor(month*12)+1;
+	var date  = year+"/"+pad(month,2);
+	ctx.fillText("Date: "+date,$(canvas).width()-168,height-60+24);// * y_zoom + y_offset);
+	if(cache.selected.node.date_min != cache.selected.node.date_max){
+	    year  = Math.floor(cache.selected.node.date_min);
+	    month = cache.selected.node.date_min-year;
+	    month = Math.floor(month*12)+1;
+	    var mindate  = year+"/"+pad(month,2);
+	    year  = Math.floor(cache.selected.node.date_max);
+	    month = cache.selected.node.date_max-year;
+	    month = Math.floor(month*12)+1;
+	    var maxdate  = year+"/"+pad(month,2);
+	    ctx.fillText("Confidence: ["+mindate+","+maxdate+"]",$(canvas).width()-168,height-60+36);// * y_zoom + y_offset);
+	}
     }
 }
 
@@ -758,7 +793,7 @@ function init_canvas(){
 	    }
 	    x_offset = check_offset(x_offset, $(canvas).width(), zx);
 	    y_offset = check_offset(y_offset, height, zy);
-	    nodes = caches[index].index.get_nodes(Math.floor((e.offsetX - x_offset)*1.0/zx), Math.floor((e.offsetY - y_offset)*1.0/zy),5);
+	    nodes = caches[index].index.get_nodes(((e.offsetX - x_offset)*1.0/zx), ((e.offsetY - y_offset)*1.0/zy),5/zx, 5/zy);
 	    if(nodes.length == 0){
 		caches[index].selected = null;
 		$(canvas).trigger("node:unselected");
@@ -852,13 +887,13 @@ function SpatialIndex(width,height){
 	this.index[ind].push({"node": tree_node,"x":x,"y":y});
     }
 
-    this.get_nodes = function(x, y, precision){
+    this.get_nodes = function(x, y, x_precision,y_precision){
 	var output = [];
 	var ind = Math.floor(y/this.resolution)*this.cols + Math.floor(x/this.resolution);
 	for(var i = 0; i < this.index[ind].length;i++){
 	    var obj = this.index[ind][i];
-	    if(Math.abs(obj.x-x)<=precision &&
-	       Math.abs(obj.y-y)<=precision){
+	    if(Math.abs(obj.x-x)<=x_precision &&
+	       Math.abs(obj.y-y)<=y_precision){
 		output.push(obj);
 	    }
 	}

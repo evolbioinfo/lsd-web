@@ -13,7 +13,6 @@ class LSDRunner:
         self.lsdrun = lsdrun
 
     def run(self):
-        print "Launching "+self.lsdrun.run_name
         options = []
         tempdir=tempfile.mkdtemp()
         dateFile = open(os.path.join(tempdir, "date.txt"), "w+t")
@@ -90,17 +89,13 @@ class LSDRunner:
         self.lsdrun.run_out_message=out
         self.lsdrun.run_outpath=outputFile
         print [self.lsdpath]+options
-        print "Error: "+self.lsdrun.run_err_message
-        print "Output: "+self.lsdrun.run_out_message
         self.lsdrun.save()
 
         resDateFileName = outputFile+".date.newick"
         resNWFileName = outputFile+".newick"
         resNXFileName = outputFile+".nexus"
         
-        print "Before Results!!!!"
         if os.path.isfile(resDateFileName):
-            print "Results!!!!"+resDateFileName
             resDateFile = open(resDateFileName,'r')
             resNWFile = open(resNWFileName,'r')
             resNXFile = open(resNXFileName,'r')
@@ -111,7 +106,6 @@ class LSDRunner:
             substinfos = self.parseRes(resFile)
             index = 0
             for treedate in dates:
-                # print "DATE:::"+treedate
                 nw = nws[index]
                 nx = nxs[index]
                 substrate = substinfos[index][0]
@@ -149,7 +143,6 @@ class LSDRunner:
             m = p.match(line)
             if m:
                 sublistrate = [m.group(1),m.group(5)]
-                print m.group(1)+"--|--"+m.group(5)+"\n"
                 substrate.append(sublistrate)
         return substrate
 

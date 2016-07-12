@@ -19,15 +19,12 @@ class LSDRunParser:
     def parse(request):
         tree=request.POST['inputtreestring'];
         
-        # print tree
-
         dates=""
         if 'inputdate' in request.FILES and request.POST['datesornot']=="yes":
             dates=LSDRunParser.parseFile(request.FILES['inputdate']);
 
         rate=request.POST.get('substrate','None')
         if rate != 'None' and rate != '' :
-            print "RATE:"+rate
             substrate=float(rate)
         else:
             substrate=-1
@@ -35,7 +32,6 @@ class LSDRunParser:
         outgroup = request.POST.get("outgroupornot")=="yes"
 
         outgroups= request.POST['outgrouplist']
-        print outgroups
         # if 'outgroups' in request.FILES:
         #     outgroups=LSDRunParser.parseFile(request.FILES['outgroups']);
                     
@@ -98,7 +94,6 @@ class LSDRunParser:
                     num = int(line)
                 else:
                     date = re.split('\s',line)
-                    print date[0]
                     r.runtaxondates_set.create(
                         taxon_name = date[0],
                         taxon_date = date[1])
