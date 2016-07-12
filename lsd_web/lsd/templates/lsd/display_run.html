@@ -44,6 +44,22 @@
       <div>
 	<a class="label label-info" href="{% url 'lsd:check_run' %}?jid={{jid}}&png=0">png</a>
 	<a class="label label-warning" href="{% url 'lsd:check_run' %}?jid={{jid}}&nexus=0">nexus</a>
+	<span class="dropdown">
+	  <a class="label label-success dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	    share
+	  </a>
+	  <div class="dropdown-menu" aria-labelledby="dropdownMenu1" style="width:200px;">
+	    <div class="form-group has-feedback">
+	    <label class="control-label">Copy URL</label>
+	    <input type="text" class="form-control input-sm" value="{{ baseurl }}" placeholder="Username" id="copyurl"/>
+	    <span class="glyphicon glyphicon-copy form-control-feedback" id="copyurlglyph"></span>
+	    <div class="alert alert-success alert-dismissible fade in" role="alert" id="copyalert">
+	      <span id="copyresult"></span>
+	    </div>
+	    </div>
+	  </div>
+	</span>
+	
       </div>
     </div>
   </div>

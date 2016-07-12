@@ -78,3 +78,8 @@ pre.terminal-messages{
 .glyphicon-right {
   float:right;
 }
+
+/* #copyurlglyph { */
+/*     pointer-events: initial;  /\* or - auto // or -  unset  *\/ */
+/*     cursor:pointer; */
+/* } */

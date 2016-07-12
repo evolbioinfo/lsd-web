@@ -158,7 +158,8 @@ def check_run(request):
             #'treedateimages' : treeDateData,
             'output'     : r.run_out_message,
             'error'      : r.run_err_message,
-            'jid'        : jid
+            'jid'        : jid,
+            'baseurl'       : request.build_absolute_uri()
         }
         return  render(request, 'lsd/display_run.html', context)
 
