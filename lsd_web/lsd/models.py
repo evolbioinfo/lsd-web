@@ -54,7 +54,7 @@ class RunTaxonDates(models.Model):
         on_delete=models.CASCADE
     )
     taxon_name = models.CharField(max_length=300)
-    taxon_date = models.FloatField()
+    taxon_date = models.CharField(max_length=300)
 
 class RunOutGroups(models.Model):
     lsd_run    = models.ForeignKey(

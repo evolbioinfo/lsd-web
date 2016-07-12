@@ -2,6 +2,7 @@ from lsd.models import LSDRun, RunTrees, RunTaxonDates, RunOutGroups
 from datetime import datetime
 from django.utils import timezone
 from django.db import transaction
+import re
 import tempfile
 
 class LSDRunParser:
@@ -96,11 +97,11 @@ class LSDRunParser:
                 if index == 0 :
                     num = int(line)
                 else:
-                    date = line.split('\t')
+                    date = re.split('\s',line)
+                    print date[0]
                     r.runtaxondates_set.create(
                         taxon_name = date[0],
-                        taxon_date = float(date[1])
-                    )
+                        taxon_date = date[1])
                 index+=1
 
         with transaction.atomic():
