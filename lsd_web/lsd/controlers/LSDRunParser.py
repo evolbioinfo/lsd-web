@@ -1,4 +1,5 @@
 from lsd.models import LSDRun, RunTrees, RunTaxonDates, RunOutGroups
+from lsd.exceptions.RunParserException import RunParserException
 from datetime import datetime
 from django.utils import timezone
 from django.db import transaction
@@ -18,6 +19,9 @@ class LSDRunParser:
     @staticmethod
     def parse(request):
         tree=request.POST['inputtreestring'];
+
+        if tree=="":
+            raise RunParserException("Information is missing","Input tree file is missing")
         
         dates=""
         if 'inputdate' in request.FILES and request.POST['datesornot']=="yes":
@@ -87,18 +91,22 @@ class LSDRunParser:
             )
 
         with transaction.atomic():
-            index = 0
-            num = 0
-            for line in dates.splitlines():
-                if index == 0 :
-                    num = int(line)
-                else:
-                    date = re.split('\s',line)
-                    r.runtaxondates_set.create(
-                        taxon_name = date[0],
-                        taxon_date = date[1])
-                index+=1
+            try:
+                index = 0
+                num = 0
+                for line in dates.splitlines():
+                    if index == 0 :
+                        num = int(line)
+                    else:
+                        date = re.split('\s',line)
+                        r.runtaxondates_set.create(
+                            taxon_name = date[0],
+                            taxon_date = date[1])
+                    index+=1
+            except :
+                raise RunParserException("Parsing error","Cannot parse date file")
 
+                
         with transaction.atomic():
             for taxon in outgroups.splitlines():
                 r.runoutgroups_set.create(taxon_name=taxon)

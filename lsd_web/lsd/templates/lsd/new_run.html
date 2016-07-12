@@ -3,9 +3,13 @@
 {% block content %}
 <h1>LSD</h1>
 
-<ul class="nav nav-tabs">
-  <li class="active"><a href="#trees" aria-controls="trees" role="tab" data-toggle="tab">Input tree(s)</a></li>
-</ul>
+{% if error %}
+<div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  <span class="sr-only">Error:</span>
+  {{error}}<br/>
+</div>
+{% endif %}
 
 <form action="{% url 'lsd:submit_run' %}" method="post" enctype="multipart/form-data" id="newrunform">
   <input type="hidden" name="constraints" id="constraints" value="True"/>
@@ -19,8 +23,6 @@
 {% csrf_token %}
   
 <!-- Tab panes -->
-<div class="tab-content">
-  <div role="tabpanel" class="tab-pane active" id="trees">
     <div class="form-group row">
       <label for="inputtree" class="col-sm-2 form-control-label">Choose input tree file</label>
       <div class="col-sm-10">
@@ -62,6 +64,7 @@
 	    <div id="nooutgroupselect">
 	    Estimate the root:
 	    <select name="estimateroot" class="c-select" id="estimaterootselect">
+	      <option value=\"a\" selected>Searches on all branches</option>
 	    </select>
 	    </div>
 	  </div>
@@ -148,9 +151,6 @@
 	<small class="text-muted"> sequence length: Please enter the length of the sequences used to build the tree</small>
       </div>
     </div>
-    
-  </div>
-</div>
 
 <button type="submit" class="btn btn-primary">Run LSD</button>
 </form>
