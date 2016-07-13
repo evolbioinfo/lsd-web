@@ -986,54 +986,7 @@ function init_tree_reader(){
 		    }else{
 			outgrouperror("You should first select a Taxon");
 		    }
-		});
-		
-		$('#reroottree').click(function(event){
-		    event.preventDefault();
-		    if(outgroup_ancestor != null){
-			if(outgroup_ancestor != input_tree){
-			    var tax = get_taxas(outgroup_ancestor);
-			    $("#alltaxalist").empty();
-			    $('#taxon').val("");
-			    var remove_outgroup = $('#removeoutgroup').is(':checked');
-			    input_tree = reroot_from_outgroup(input_tree, tax, remove_outgroup);
-
-			    // Update outgroup list if ougroup is kept
-			    if(! remove_outgroup){
-				var outstring = "";
-				for(var ni = 0; ni< tax.length; ni++){
-				    if(ni>0){
-					outstring = outstring + "\n";
-				    }
-				    outstring = outstring+tax[ni].tax;
-				}
-				$("#outgrouplist").val(outstring);
-			    }else{
-				$("#outgrouplist").val("");
-			    }
-			    
-			    // Update taxon list in reroot div
-			    var newtax = get_taxas(input_tree);
-			    $("#taxon").empty();
-			    for(i = 0;i < newtax.length; i++){
-				$("#taxon").append("<option value=\""+newtax[i].tax+"\">"+newtax[i].tax+"</option>");
-			    }
-			    $("#taxon").trigger("chosen:updated");
-
-			    
-			    outgroup_ancestor = null;
-			    // Update Tree variable
-			    // console.log(to_newick(input_tree));
-			    $("#inputtreestring").val(to_newick(input_tree));
-			    outgroupsuccess("Tree succesfully rerooted");
-			}else{
-			    outgrouperror("Outgroup is the whole tree, won't reroot");
-			}
-		    }else{
-			outgrouperror("No outgroup is defined");
-		    }
-		});
-		
+		});		
 	    } catch (e) {
 		treeerror("["+e.name+"] : " + e.message);
 		$("#newrunform")[0].reset();
@@ -1045,6 +998,69 @@ function init_tree_reader(){
         };
 
         reader.readAsText(inputFile);
+    });
+}
+
+function init_form_submit(){
+    $('#newrunform').submit(function(event){
+	// event.preventDefault();
+	// We reroot the tree if needed
+	var rerootbool = $('input[name=outgroupornot]:checked', '#newrunform').val() == "yes";
+
+	if($("#inputtreestring").val() == ""){
+	    treeerror("Input tree has not been selected");
+	    return(false);
+	}
+	
+	if(rerootbool){
+	    if(outgroup_ancestor != null){
+		if(outgroup_ancestor != input_tree){
+		    var tax = get_taxas(outgroup_ancestor);
+		    $("#alltaxalist").empty();
+		    $('#taxon').val("");
+		    var remove_outgroup = $('#removeoutgroup').is(':checked');
+		    input_tree = reroot_from_outgroup(input_tree, tax, remove_outgroup);
+		    
+		    // Update outgroup list if ougroup is kept
+		    if(! remove_outgroup){
+			var outstring = "";
+			for(var ni = 0; ni< tax.length; ni++){
+			    if(ni>0){
+				outstring = outstring + "\n";
+			    }
+			    outstring = outstring+tax[ni].tax;
+			}
+			$("#outgrouplist").val(outstring);
+		    }else{
+			$("#outgrouplist").val("");
+		    }
+		    
+		    // Update taxon list in reroot div
+		    var newtax = get_taxas(input_tree);
+		    $("#taxon").empty();
+		    for(i = 0;i < newtax.length; i++){
+			$("#taxon").append("<option value=\""+newtax[i].tax+"\">"+newtax[i].tax+"</option>");
+		    }
+		    $("#taxon").trigger("chosen:updated");
+		    
+		    
+		    outgroup_ancestor = null;
+		    // Update Tree variable
+		    // console.log(to_newick(input_tree));
+		    $("#inputtreestring").val(to_newick(input_tree));
+		    outgroupsuccess("Tree succesfully rerooted");
+		    return(true);
+		}else{
+		    outgrouperror("Outgroup is the whole tree, won't reroot");
+		    return(false);
+		}
+	    } else {
+		outgrouperror("No outgroup is defined");
+		return(false);
+	    }
+	} else{
+	    return(true);
+	}
     });
 }
 
@@ -1100,7 +1116,9 @@ $(document).ready(function(){
     init_canvas();
 
     init_tree_reader();
-
+    
+    init_form_submit();
+    
     init_chosen();
 });
 
