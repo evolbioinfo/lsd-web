@@ -88,6 +88,10 @@ class LSDRunner:
         self.lsdrun.run_err_message=err
         self.lsdrun.run_out_message=out
         self.lsdrun.run_outpath=outputFile
+
+        self.lsdrun.run_out_message=self.lsdrun.run_out_message[-2000:]
+        self.lsdrun.run_err_message=self.lsdrun.run_err_message[-2000:]
+
         print [self.lsdpath]+options
         self.lsdrun.save()
 

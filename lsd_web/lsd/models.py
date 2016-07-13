@@ -30,8 +30,8 @@ class LSDRun(models.Model):
     run_rate_lower_bound = models.FloatField(default=0.00001)
     run_name             = models.CharField(max_length=100, default="No Name")
     run_status           = models.CharField(max_length=1,default=PENDING, choices=RUNSTATUS)
-    run_err_message      = models.CharField(max_length=1000,default="")
-    run_out_message      = models.CharField(max_length=1000,default="")
+    run_err_message      = models.CharField(max_length=2000,default="")
+    run_out_message      = models.CharField(max_length=2000,default="")
     run_outpath          = models.CharField(max_length=1000,default="")
     run_user             = models.ForeignKey(User, null=True, blank=True, default = None)
 
