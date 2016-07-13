@@ -14,27 +14,18 @@
 
   <div class="row">
     <div class="col-sm-1 col-title">
-      <p>Messages</p>
+      <p>Tree</p>
     </div>
     <div class="col-sm-11">
-      <ul class="nav nav-tabs">
-	<li class="active"><a href="#output-messages" aria-controls="output" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-console"></span>Output</a></li>
-	<li><a href="#error-messages" aria-controls="error" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-console"></span> Error</a></li>
-      </ul>
-      <div class="tab-content">
-	<div role="tabpanel" class="tab-pane active" id="output-messages">
-	  <pre class="terminal-messages">
-	    {{output}}
-	  </pre>
-	</div>
-	<div role="tabpanel" class="tab-pane" id="error-messages">
-	  <pre class="terminal-messages">
-	    {{error}}
-	  </pre>
+      <div class="resulttree">
+	<!-- <img src="data:image/png;base64,{{image}}"/> -->
+	<div class="canvaswrapper">
+	  <canvas class="tree_canvas" data-newick-url="{% url 'lsd:check_run' %}?jid={{jid}}&newick=0"></canvas>
 	</div>
       </div>
     </div>
   </div>
+
 
   <div class="row">
     <div class="col-sm-1 col-title">
@@ -64,19 +55,29 @@
     </div>
   </div>
 
-  <div class="row">
+  
+    <div class="row">
     <div class="col-sm-1 col-title">
-      <p>Tree</p>
+      <p>Messages</p>
     </div>
     <div class="col-sm-11">
-      <div class="resulttree">
-	<!-- <img src="data:image/png;base64,{{image}}"/> -->
-	<div class="canvaswrapper">
-	  <canvas class="tree_canvas" data-newick-url="{% url 'lsd:check_run' %}?jid={{jid}}&newick=0"></canvas>
+      <ul class="nav nav-tabs">
+	<li class="active"><a href="#output-messages" aria-controls="output" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-console"></span>Output</a></li>
+	<li><a href="#error-messages" aria-controls="error" role="tab" data-toggle="tab"><span class="glyphicon glyphicon-console"></span> Error</a></li>
+      </ul>
+      <div class="tab-content">
+	<div role="tabpanel" class="tab-pane active" id="output-messages">
+	  <pre class="terminal-messages">
+	    {{output}}
+	  </pre>
+	</div>
+	<div role="tabpanel" class="tab-pane" id="error-messages">
+	  <pre class="terminal-messages">
+	    {{error}}
+	  </pre>
 	</div>
       </div>
     </div>
   </div>
-
 
 {% endblock %}
