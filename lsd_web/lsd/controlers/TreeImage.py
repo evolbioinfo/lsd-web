@@ -19,9 +19,9 @@ class TreeImage:
             tax_space=25
             height=tax_space*(tree.count_terminals()-1)+2*border
         root = tree.node(tree.root)
-        point_radius=3
-        max_date = TreeImage.get_max_date(tree)
-        min_date = TreeImage.get_min_date(tree)
+        point_radius=2
+        max_date = tree.max_date
+        min_date = tree.min_date
         #print str(min_date)+" "+str(max_date)
         image = Image.new('RGBA', (width,height), (255,255,255,255))
 	font_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))+"/../fonts/"
@@ -37,14 +37,22 @@ class TreeImage:
     @staticmethod
     def coordinates(image_draw,tree,node,y_dict,min_date,max_date,width,prev_x,prev_y,border,point_radius,fnt_small,fnt_large):
         middle=y_dict[node.get_id()]
+        # On prend la date et on calcul la position x
+        n_date = node.date_n
+        x_coord= (n_date-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
+
+        x_min_coord = (node.date_min-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
+        x_max_coord = (node.date_max-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
+
+        # On affiche la ligne horizontale de Confidence Interval
+        #image_draw.line([(x_min_coord,middle),(x_max_coord,middle)],(51,193,95,255),4)
+        if not(node.date_min == node.date_max):
+            TreeImage.rounded_line(image_draw,x_min_coord,middle,x_max_coord,middle,(51,193,95,255),4)
+
         # On ajoute les lignes verticales precedentes si non root
         if node.get_id() != tree.root:
             image_draw.line([(prev_x,prev_y),(prev_x,middle)],(0,0,0,255),2)
-
-        # On prend la date et on calcul la position x
-        n_date = TreeImage.parse_comment_date(node)
-        x_coord= (n_date-min_date) * (width-2*border) * 1.0 / (max_date-min_date)+border
-
+        
         # On affiche le noeud
         image_draw.ellipse([x_coord-point_radius,middle-point_radius,x_coord+point_radius,middle+point_radius],fill=(0,0,0,255))
         
@@ -88,37 +96,6 @@ class TreeImage:
                 draw_image.text([x_coord,0], str(year), (100,100,100,255), font=f)
 
     @staticmethod
-    def get_max_date(tree):
-        max_date = 0
-        if tree.node(tree.root) is not None:
-            max_date = TreeImage.max_date_rec(tree,tree.node(tree.root))
-        return(max_date)
-
-    @staticmethod
-    def max_date_rec(tree,node):
-        max_date = 0
-        if len(node.succ) == 0:
-            return TreeImage.parse_comment_date(node)
-        else:
-            for n in node.succ:
-                max_date = max(max_date,TreeImage.max_date_rec(tree,tree.node(n)))
-        return(max_date)
-
-    @staticmethod
-    def get_min_date(tree):
-        if tree.node(tree.root) is not None:
-            return TreeImage.parse_comment_date(tree.node(tree.root))
-        else:
-            return None
-            
-    @staticmethod
-    def parse_comment_date(node):
-        dateStr= "0"
-        if node.data.comment:
-            dateStr = re.sub("\[&date=(-{0,1}\d+(\.\d+){0,1})\]", r"\1", node.data.comment)
-        return float(dateStr)
-
-    @staticmethod
     def y_coords(y_dict,tree,node,height,border,num_terminal):
         #print "Current term: "+str(num_terminal)
         #print "node: "+str(node.get_id())
@@ -139,6 +116,14 @@ class TreeImage:
         #print "num term: "+str(num_terminal)
         return num_terminal
 
+    @staticmethod
+    def rounded_line(image_draw,x1,y1,x2,y2,color,width):
+        image_draw.line([(x1,y1),(x2,y2)],color,width)
+        w=math.floor(width/2)
+        image_draw.ellipse((x1 - w+1, y1 - w+1, x1 + w -1, y1 + w ), fill=color, outline=None)
+        image_draw.ellipse((x2 - w+1, y2 - w+1, x2 + w -1, y2 + w ), fill=color, outline=None)
+
+    
     @staticmethod
     def main():
         nexusIO = Nexus.Nexus.Nexus("#NEXUS\nBegin trees;\ntree 1 = (((4[&date=2016]:0.0465834,5[&date=2015.57]:0.0241405)[&date=2015.11]:0.0440383,((0[&date=2015.12]:0.041884,1[&date=2015.68]:0.0710232)[&date=2014.32]:0.024068,2[&date=2016]:0.111936)[&date=2013.86]:-0.0210531)[&date=2014.26]:0.0394723,3[&date=2015.69]:0.113981)[&date=2013.51];\nEnd;")

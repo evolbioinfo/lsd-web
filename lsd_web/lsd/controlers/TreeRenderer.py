@@ -41,54 +41,17 @@ class TreeRenderer:
         return("")
 
     @staticmethod
-    def renderNexus(nexusString,widthPx,pdf):
-        newickString = re.sub("\[&date=(\d+(\.\d+){0,1})\](:-{0,1}\d*(\.\d+){0,1}){0,1}", r":\1", nexusString)
-        
-        t = Tree( newickString )
-        # Directory where temptree 
-        # image will be stored
-        tempdir=tempfile.mkdtemp()
-        if(pdf):
-            imageFile=os.path.join(tempdir, "image.pdf")
-        else:
-            imageFile=os.path.join(tempdir, "image.svg")
-        ts = TreeStyle()
-        ts.show_leaf_name = False
-        ts.layout_fn = TreeRenderer.layout
-        #ts.show_branch_length = True
-        #ts.show_branch_support = True
-        #ts.mode = "c"
-        #ts.mode = "c"
-        #ts.arc_start = -180 # 0 degrees = 3 o'clock
-        #ts.arc_span = 180
-        #ts.legend=False
-        ts.show_scale=False
-
-        # On ajoute les dates aux noeuds
-        for n in t.traverse():
-            date=n.dist
-            month=n.dist-(int)(n.dist)
-            month=(int)(month*12)+1
-            n.add_face(TextFace(str(month).zfill(2)+"/"+str((int)(date)),ftype='Arial', fsize=5, fgcolor='black', fstyle='italic', tight_text=True),column=1)
-            
-        t.render(imageFile, tree_style=ts, w=widthPx, units="px")
-        #TreeRenderer.cropImage(imageFile)
-        with open(imageFile, "rb") as image_file:
-            if pdf:
-                encoded_string = image_file.read()
-            else:
-                encoded_string = base64.b64encode(image_file.read())
-            return(encoded_string)
-        shutil.rmtree(tempdir)
-        return("")
-
-    @staticmethod
     def renderNexus_own(nexusString,widthPx):
+        nexusString = TreeRenderer.replace_comments(nexusString)
         treestring = "#NEXUS\nBegin trees;\ntree 1 = "+nexusString+"\nEnd;\n"
         nexusIO = Nexus.Nexus.Nexus(treestring)
         tempdir=tempfile.mkdtemp()
         image_file=os.path.join(tempdir, "image.png")
         for t in nexusIO.trees:
+            TreeRenderer.collapse_null_branches(t,t.node(t.root))
+            TreeRenderer.parse_dates(t,t.node(t.root),0)
+            TreeRenderer.parse_confidence_intervals(t,t.node(t.root),0,0)
+            TreeRenderer.compute_min_max_dates(t,t.node(t.root))
             TreeImage.render_png(t,widthPx,0,image_file)
         with open(image_file, "rb") as image:
             encoded_string = image.read()
@@ -113,32 +76,62 @@ class TreeRenderer:
         shutil.rmtree(tempdir)
         return("")
 
+    # Replaces the comments [&date=...][&CI=] by [&date=...|CI="min-max"]
+    @staticmethod
+    def replace_comments(nexusString):
+        nstring= nexusString.replace("][&","|")
+        nstring = re.sub(r"CI=\"(\d+(\.\d+){0,1})\((\d+(\.\d+){0,1}),(\d+(\.\d+){0,1})\)\"", r'CI="\3-\5"', nstring)
+        return nstring
 
-    # @staticmethod
-    # def getTreesFromNexus(nexusString):
-    #     trees = []
-    #     tempdir=tempfile.mkdtemp()
-    #     nexusFile=os.path.join(tempdir, "tree.nx")
-    #     phyloxmlFile=os.path.join(tempdir, "tree.xml")
-    #     imageFile=os.path.join(tempdir, "image.png")
-    #     f = open(nexusFile, 'w')
-    #     f.write(nexusString)
-    #     f.write("\n");
-    #     f.close()
-    #     nexusIO = Nexus.Nexus.Nexus(nexusFile)
-    #     #nexusTree = Phylo.read(nexusFile, 'nexus')
-    #     Phylo.write(nexusIO.trees, phyloxmlFile,'phyloxml')
-        
-    #     #Phylo.convert(nexusFile, 'nexus', phyloxmlFile, 'phyloxml')
+    @staticmethod
+    def collapse_null_branches(tree,node):
+        childs = [];
+        for succ in node.succ :
+	    TreeRenderer.collapse_null_branches(tree, tree.node(succ))
+	    if tree.node(succ).data.branchlength == 0 and len(tree.node(succ).succ)>0 :
+                for succ2 in tree.node(succ).succ:
+		    childs.append(succ2);
+	    else:
+	        childs.append(succ)
+        node.succ = childs;
 
-    #     print phyloxmlFile
-    #     xml_project = Phyloxml()
-    #     xml_project.build_from_file(phyloxmlFile)
-    #     for tree in xml_project.get_phylogeny():
-    #         trees.append(tree)
+    @staticmethod
+    def parse_dates(tree,node,prev_date):
+        if node.data.comment:
+            dateStr = re.sub(r"\[&date=(-{0,1}\d+(\.\d+){0,1})(\]|\|).*", r"\1", node.data.comment)
+            node.date_n = float(dateStr)
+        else:
+            node.date_n = prev_date
+        for succ in node.succ:
+            TreeRenderer.parse_dates(tree,tree.node(succ),node.date_n)
 
-    #     shutil.rmtree(tempdir)
-    #     return(trees)
+    @staticmethod
+    def parse_confidence_intervals(tree,node,prev_date_min,prev_date_max):
+        if node.data.comment:
+            m = re.match(r".*CI=\"(\d+(\.\d+){0,1})-(\d+(\.\d+){0,1})\".*", node.data.comment)
+            if(m):
+                node.date_min = float(m.group(1))
+                node.date_max = float(m.group(3))
+            else:
+                node.date_min = node.date_n
+                node.date_max = node.date_n
+        else:
+            node.date_min = prev_date_min
+            node.date_max = prev_date_max
+        for succ in node.succ:
+            TreeRenderer.parse_confidence_intervals(tree,tree.node(succ),node.date_min,node.date_max)
+
+    @staticmethod
+    def compute_min_max_dates(tree,node):
+        if(node == tree.node(tree.root)):
+            tree.min_date=min(node.date_n,node.date_min)
+            tree.max_date=max(node.date_n,node.date_max)
+        else:
+            tree.min_date = min(node.date_n, node.date_min, tree.min_date)
+            tree.max_date = max(node.date_n, node.date_max, tree.max_date)
+            
+        for succ in node.succ:
+            TreeRenderer.compute_min_max_dates(tree,tree.node(succ))
 
     @staticmethod
     def cropImage(imagefile):
