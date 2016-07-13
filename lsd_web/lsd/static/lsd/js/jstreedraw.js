@@ -365,27 +365,18 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
     canvas.width  = cache.width;
     canvas.height = cache.height;
 
-    for(var n = 0; n < cache.ci_lines.length;n++){
-	ctx.beginPath();
-	ctx.moveTo(cache.ci_lines[n].x1 * x_zoom + x_offset,cache.ci_lines[n].y1 * y_zoom + y_offset);
-	ctx.lineTo(cache.ci_lines[n].x2 * x_zoom + x_offset,cache.ci_lines[n].y2 * y_zoom + y_offset);
-	ctx.strokeStyle= '#33c15f';
-	ctx.lineWidth=4;
-	ctx.lineCap = 'round';
-	ctx.lineJoin= 'round';
-	ctx.stroke();
-    }
+    // If too many taxa compared to zoom : We do not display tax names
+	for(var n = 0; n < cache.ci_lines.length;n++){
+	    ctx.beginPath();
+	    ctx.moveTo(cache.ci_lines[n].x1 * x_zoom + x_offset,cache.ci_lines[n].y1 * y_zoom + y_offset);
+	    ctx.lineTo(cache.ci_lines[n].x2 * x_zoom + x_offset,cache.ci_lines[n].y2 * y_zoom + y_offset);
+	    ctx.strokeStyle= '#33c15f';
+	    ctx.lineWidth=4;
+	    ctx.lineCap = 'round';
+	    ctx.lineJoin= 'round';
+	    ctx.stroke();
+	}
     
-    for(var n = 0; n < cache.nodes.length;n++){
-	ctx.beginPath();
-	ctx.arc(cache.nodes[n].x * x_zoom + x_offset, cache.nodes[n].y * y_zoom + y_offset, cache.nodes[n].rad, 0,2*Math.PI);
-	ctx.fillStyle = "#000000";
-	ctx.strokeStyle= '#000000';
-	ctx.lineWidth=3;
-	ctx.fill();
-	ctx.stroke();
-    }
-
     for(var l = 0; l < cache.lines.length; l++){
         ctx.beginPath();
 	ctx.moveTo(cache.lines[l].x1 * x_zoom + x_offset,cache.lines[l].y1 * y_zoom + y_offset);
@@ -407,32 +398,45 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	//ctx.fill();
 	ctx.stroke();
     }
-    
-    for(var t = 0; t < cache.texts.length; t++){
-    	ctx.fillStyle = '#000000';
-	ctx.strokeStyle = '#000000';
-	
-	var text = cache.texts[t].text;
-	var txtctx;
-	if(! cache.text_ctx[t]){
-	    txtctx = new TextHorizontalCanvas(ctx, text, "12px Calibri",12);
-	    cache.text_ctx[t] = txtctx;
-	}else{
-	    txtctx = cache.text_ctx[t];
-	}
-	txtctx.draw(ctx, cache.texts[t].x * x_zoom - txtctx.textWidth - cache.texts[t].rad + x_offset,cache.texts[t].y  * y_zoom - 2-cache.texts[t].rad + y_offset);
-    }
 
-    for(var l=0; l< cache.labels.length;l++){
-	var text=cache.labels[l].text;
-	var txtctx;
-	if(! cache.label_ctx[l]){
-	    txtctx = new TextHorizontalCanvas(ctx, text, "12px Calibri",12);
-	    cache.label_ctx[l] = txtctx;
-	}else{
-	    txtctx = cache.label_ctx[l];
+    // If too many taxa compared to zoom : We do not display tax names
+    if((height-2*cache.border) / cache.labels.length * y_zoom >= 5){
+	for(var n = 0; n < cache.nodes.length;n++){
+	    ctx.beginPath();
+	    ctx.arc(cache.nodes[n].x * x_zoom + x_offset, cache.nodes[n].y * y_zoom + y_offset, cache.nodes[n].rad, 0,2*Math.PI);
+	    ctx.fillStyle = "#000000";
+	    ctx.strokeStyle= '#000000';
+	    ctx.lineWidth=2;
+	    ctx.fill();
+	    ctx.stroke();
 	}
-	txtctx.draw(ctx, cache.labels[l].x * x_zoom + cache.labels[l].rad+2 + x_offset,cache.labels[l].y * y_zoom + 2+y_offset);
+
+	for(var t = 0; t < cache.texts.length; t++){
+    	    ctx.fillStyle = '#000000';
+	    ctx.strokeStyle = '#000000';
+	    
+	    var text = cache.texts[t].text;
+	    var txtctx;
+	    if(! cache.text_ctx[t]){
+		txtctx = new TextHorizontalCanvas(ctx, text, "10px Calibri",10);
+		cache.text_ctx[t] = txtctx;
+	    }else{
+		txtctx = cache.text_ctx[t];
+	    }
+	    txtctx.draw(ctx, cache.texts[t].x * x_zoom - txtctx.textWidth - cache.texts[t].rad + x_offset,cache.texts[t].y  * y_zoom - 2-cache.texts[t].rad + y_offset);
+	}
+	
+	for(var l=0; l< cache.labels.length;l++){
+	    var text=cache.labels[l].text;
+	    var txtctx;
+	    if(! cache.label_ctx[l]){
+		txtctx = new TextHorizontalCanvas(ctx, text, "10px Calibri",10);
+		cache.label_ctx[l] = txtctx;
+	    }else{
+		txtctx = cache.label_ctx[l];
+	    }
+	    txtctx.draw(ctx, cache.labels[l].x * x_zoom + cache.labels[l].rad+2 + x_offset,cache.labels[l].y * y_zoom + 2+y_offset);
+	}
     }
 
     for(var sl = 0; sl < cache.scale_lines.length; sl++){
