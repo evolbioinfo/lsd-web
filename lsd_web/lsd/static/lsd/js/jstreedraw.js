@@ -399,19 +399,27 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	ctx.stroke();
     }
 
-    // If too many taxa compared to zoom : We do not display tax names
-    if((height-2*cache.border) / cache.labels.length * y_zoom >= 5){
-	for(var n = 0; n < cache.nodes.length;n++){
-	    ctx.beginPath();
-	    ctx.arc(cache.nodes[n].x * x_zoom + x_offset, cache.nodes[n].y * y_zoom + y_offset, cache.nodes[n].rad, 0,2*Math.PI);
-	    ctx.fillStyle = "#000000";
-	    ctx.strokeStyle= '#000000';
-	    ctx.lineWidth=2;
-	    ctx.fill();
-	    ctx.stroke();
-	}
-
-	for(var t = 0; t < cache.texts.length; t++){
+    // If too many taxa compared to zoom : We do not display all tax names
+    // One on x taxa to display if the zoom is not enough
+    var minpixels = 12;
+    var ntax = cache.nodes.length;
+    var pixelspertaxa = ((height-2*cache.border) / ntax * y_zoom);
+    var numdisp = ntax * pixelspertaxa / minpixels;
+    var xtaxa = Math.max(1,Math.floor(ntax/numdisp));
+    // for(var n = 0; n < cache.nodes.length;n++){
+    // 	if(n%xtaxa == 0){
+    // 	    ctx.beginPath();
+    // 	    ctx.arc(cache.nodes[n].x * x_zoom + x_offset, cache.nodes[n].y * y_zoom + y_offset, cache.nodes[n].rad, 0,2*Math.PI);
+    // 	    ctx.fillStyle = "#000000";
+    // 	    ctx.strokeStyle= '#000000';
+    // 	    ctx.lineWidth=2;
+    // 	    ctx.fill();
+    // 	    ctx.stroke();
+    // 	}
+    // }
+    
+    for(var t = 0; t < cache.texts.length; t++){
+	if(t%xtaxa == 0){
     	    ctx.fillStyle = '#000000';
 	    ctx.strokeStyle = '#000000';
 	    
@@ -425,8 +433,10 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	    }
 	    txtctx.draw(ctx, cache.texts[t].x * x_zoom - txtctx.textWidth - cache.texts[t].rad + x_offset,cache.texts[t].y  * y_zoom - 2-cache.texts[t].rad + y_offset);
 	}
+    }
 	
-	for(var l=0; l< cache.labels.length;l++){
+    for(var l=0; l< cache.labels.length;l++){
+	if(l%xtaxa == 0){
 	    var text=cache.labels[l].text;
 	    var txtctx;
 	    if(! cache.label_ctx[l]){
