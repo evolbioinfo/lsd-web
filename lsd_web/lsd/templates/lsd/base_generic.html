@@ -7,25 +7,51 @@
     <!-- <link href='https://fonts.googleapis.com/css?family=Macondo' rel='stylesheet' type='text/css'> -->
     <!-- <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'> -->
     <!-- <link href='https://fonts.googleapis.com/css?family=Dosis' rel='stylesheet' type='text/css'> -->
-    <link href="{% static "lsd/style.css" %}" rel="stylesheet" type="text/css">
+    <link href="{% static "lsd/PasteurTheme/css/PasteurTheme_main.css" %}" rel="stylesheet"> <!-- Theme Pasteur -->
     <script type="text/javascript" src="{% static "lsd/js/jquery-1.12.0.min.js" %}"></script>
     <script type="text/javascript" src="{% static "lsd/js/jquery-ui-1.11.4.custom/jquery-ui.min.js" %}"></script>
-    <script type="text/javascript" src="{% static "lsd/chosen/chosen.jquery.min.js" %}"></script>
-    <link href="{% static "lsd/chosen/chosen.min.css" %}" rel="stylesheet">
-    <link href="{% static "lsd/bootstrap-3.3.6-dist/css/bootstrap.min.css" %}" rel="stylesheet">
-    <script src="{% static "lsd/bootstrap-3.3.6-dist/js/bootstrap.min.js" %}"></script>
+    <script type="text/javascript" src="{% static "lsd/chosen/chosen.jquery.min.js" %}"></script> <!-- Ne pas toucher -->
+    <link href="{% static "lsd/chosen/chosen.min.css" %}" rel="stylesheet"> <!-- Ne pas toucher
+    <script src="{% static "lsd/bootstrap-3.3.6-dist/js/modernizr.js" %}"></script>
     <script type="text/javascript" src="{% static "lsd/js/functions.js" %}"></script>
-    <link href="{% static "lsd/js/jstreedraw.css" %}" rel="stylesheet" type="text/css">
-    <script type="text/javascript" src="{% static "lsd/js/jstreedraw.js" %}"></script>
+    <link href="{% static "lsd/js/jstreedraw.css" %}" rel="stylesheet" type="text/css"> -->
+    <script type="text/javascript" src="{% static "lsd/js/jstreedraw.js" %}"></script> <!-- -->
     <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
     {% block refresh %}
     {% endblock %}
   </head>
   <body>
-    <div id="header">
-      Least Squares Dating
-    </div>
-    <div id="leftpanel">
+      <div class="wrapper page-charte">
+      <div class="nav-container">
+          <div class="container">
+              <div class="logo">
+                  <img src="{% static "lsd/PasteurTheme/images/logo.jpg"%}">
+                      </div>
+              <div class="elementItem">
+                  <nav class="navbar navbar-default">
+                      <div class="container-fluid">
+                           <div class="collapse navbar-collapse" id="navigation">
+                              <ul class="nav navbar-nav pull-right">
+                                  <li><a href="#">Home</a></li>
+                                  <li><a href="{% url 'lsd:index' %}">Run</a></li>
+                                  <li><a href="{% url 'django.contrib.auth.views.login' %}?next={{ request.get_full_path|urlencode }}">Login</a></li>
+                                  <li><a href="#paginationBox">Help</a></li>
+                              </ul>
+                          </div> 
+                      </div> 
+                  </nav> 
+              </div> 
+          </div> 
+      </div>
+      <div class="header-container center">
+          <div class="container">
+              <h1> LSD
+                  <div class="subtitle">Least Squares Dating</div>
+              </h1> 
+          </div> 
+      </div>
+      
+    <!-- <div id="leftpanel">
       {% if user.is_authenticated %}
       <p class="login-info"><span class="glyphicon glyphicon-user"></span>{{ user.first_name }} {{ user.last_name }}</p>
       <div class="list-group">
@@ -46,15 +72,35 @@
 	<a class="list-group-item" href="{% url 'lsd:create_account' %}">Create account<span class="glyphicon glyphicon-right glyphicon-user"></span></a>
       </div>
       {% endif %}
-    </div>
-    <div id="content">
-      {% block content %}{% endblock %}
+    </div> -->
+    
+    <div class="main-container">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
     </div>
     <div id="rightpanel">
     </div>
-    <div id="footer">
-      <hr/>
-      LSD - 2016
+    <div id="footer" class="footer-container footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8 col-sm-8">
+                    <ul class="list-inline">
+                        <li><a target="_blank" href="https://www.pasteur.fr/fr/les-credits">Crédit</a></li>
+                        <li><a target="_blank" href="https://www.pasteur.fr/fr/mentions-legales">Mentions légales</a></li>
+                        <li><a target="_blank" href="https://don.pasteur.fr/netful-presentation-association/site/pasteur/defaut/fr/v2/don/index.html">Faites un don</a></li>
+                        <li><a target="_blank" href="https://www.facebook.com/InstitutPasteur"><svg class="icon icon-facebook"><use xlink:href="#icon-facebook"></use></svg></a></li>
+                        <li><a target="_blank" href="https://twitter.com/aiderpasteur"><svg class="icon icon-twitter"><use xlink:href="#icon-twitter"></use></svg></a></li>
+                        <li><a target="_blank" href="https://www.linkedin.com/company/institut-pasteur"><svg class="icon icon-linkedin"><use xlink:href="#icon-linkedin"></use></svg></a></li>
+                        <li><a target="_blank" href="https://www.youtube.com/user/institutpasteurvideo"><svg class="icon icon-youtube3"><use xlink:href="#icon-youtube3"></use></svg></a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 col-sm-4 col-xs-12"> <a target="_blank" href="https://www.pasteur.fr"> <img alt="Institut Pasteur – Fondation d'utilité publique habilitée à recevoir des dons et des legs" src="{% static "lsd/PasteurTheme/images/logo-footer.png"%}"> </a>
+                </div> 
+                <div class="col-md-4 col-sm-8 col-xs-12 footer-nav"> </div> 
+            </div> 
+        </div> 
+    </div>
     </div>
   </body>
 </html>
