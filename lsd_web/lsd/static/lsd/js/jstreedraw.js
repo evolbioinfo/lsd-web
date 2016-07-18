@@ -1000,12 +1000,12 @@ function init_tree_reader(){
 		    }else{
 			outgrouperror("You should first select a Taxon");
 		    }
-		});		
+		});
+		treesuccess("Tree succesfully imported");
 	    } catch (e) {
 		treeerror("["+e.name+"] : " + e.message);
 		$("#newrunform")[0].reset();
 	    }
-	    treesuccess("Tree succesfully imported");
 	};
         reader.onerror = function(event) {
             $('#errordiv').text("Error opening file: " + event.target.error.code);
