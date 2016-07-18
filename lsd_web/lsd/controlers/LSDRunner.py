@@ -27,10 +27,10 @@ class LSDRunner:
         else:
             if self.lsdrun.run_root_date != -1:
                 options.append("-a")
-                options.append(str(self.lsdrun.run_root_date))
+                options.append(str(int(self.lsdrun.run_root_date)))
             if self.lsdrun.run_tips_date != -1:
                 options.append("-z")
-                options.append(str(self.lsdrun.run_tips_date))
+                options.append(str(int(self.lsdrun.run_tips_date)))
         # Confidence intervals
         if self.lsdrun.run_with_conf_int:
             nb_samples = self.lsdrun.run_nb_samples
