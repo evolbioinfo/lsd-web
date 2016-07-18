@@ -5,19 +5,26 @@
   <li class="active"><a href="#trees" aria-controls="trees" role="tab" data-toggle="tab">Input tree(s)</a></li>
 </ul>
 
+{% if error %}
+<div class="alert alert-danger" role="alert">
+  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+  <span class="sr-only">Error:</span>
+  {{error}}<br/>
+</div>
+{% endif %}
+
 <form action="{% url 'lsd:submit_run' %}" method="post" enctype="multipart/form-data" id="newrunform">
   <input type="hidden" name="constraints" id="constraints" value="True"/>
-  <input type="hidden" name="variancesornot" id="variances" value="False"/>
+  <input type="hidden" name="variancesornot" id="variances" value="True"/>
+  <input type="hidden" name="outgrouplist" id="outgrouplist" value="" />
   <input type="hidden" name="varianceparam" id="varianceparam" value="10" />
-  <input type="hidden" name="seqlength" id="seqlength" value="1000" />
+  <input type="hidden" name="nb_samples" id="nb_samples" value="10" />
   <input type="hidden"  name="lowboundrate" id="lowboundrate" value="0.000010" />
   <input type="hidden"  name="inputtreestring" id="inputtreestring" value="" />
 
 {% csrf_token %}
   
 <!-- Tab panes -->
-<div class="tab-content">
-  <div role="tabpanel" class="tab-pane active" id="trees">
     <div class="form-group row">
       <label for="inputtree" class="col-sm-2 form-control-label">Choose input tree file</label>
       <div class="col-sm-10">
@@ -59,6 +66,7 @@
 	    <div id="nooutgroupselect">
 	    Estimate the root:
 	    <select name="estimateroot" class="c-select" id="estimaterootselect">
+	      <option value=\"a\" selected>Searches on all branches</option>
 	    </select>
 	    </div>
 	  </div>
@@ -68,7 +76,6 @@
 	    <ul class="list-group" id="alltaxalist">
 	    </ul>
 	    <input type="button" class="btn btn-primary" id="getancestor" value="More Taxa"/>
-	    <input type="button" class="btn btn-success" id="reroottree" value="Reroot Tree"/>
 	    <input type="button" class="btn btn-danger" id="clearoutgroup" value="Clear Outgroup"/>
 	    <br/><input type="checkbox" id="removeoutgroup" checked="checked" />Remove outgroup after reroot<br/>
 
@@ -122,16 +129,31 @@
     </div>
 
     <div class="form-group row">
+      <label for="inputtree" class="col-sm-2 form-control-label">Confidence Intervals
+	<small class="text-muted">You can specify if you want to compute confidence intervals (slower) or not (faster)</small>
+      </label>
+      <div class="col-sm-10">
+	<input type="checkbox" name="with_conf_int" id="with_conf_int" checked="checked" />Compute confidence interval on dates<br/>
+      </div>
+    </div>
+    
+    <div class="form-group row">
       <label class="col-sm-2 form-control-label">Substitution rate</label>
       <div class="col-sm-10">
 	<input type="text" class="form-control" id="substrate" name="substrate" placeholder="None"/>
 	<small class="text-muted"> rate: If you have one, you may enter a substitution rate for the tree</small>
       </div>
     </div>
-  </div>
-</div>
 
+    <div class="form-group row">
+      <label class="col-sm-2 form-control-label">Sequence length</label>
+      <div class="col-sm-10">
+	<input type="text" class="form-control" name="seqlength" id="seqlength" value="1000" />
+	<small class="text-muted"> sequence length: Please enter the length of the sequences used to build the tree</small>
+      </div>
+    </div>
 <button type="submit" class="btn btn-default">Run LSD</button>
+
 </form>
 
 {% endblock %}

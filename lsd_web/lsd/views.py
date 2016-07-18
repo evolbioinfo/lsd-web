@@ -6,13 +6,12 @@ import base64
 from lsd.controlers.LSDRunParser import LSDRunParser
 from lsd.controlers.TreeRenderer import TreeRenderer
 from lsd.controlers.UserManager import UserManager
+from lsd.exceptions.RunParserException import RunParserException
 from lsd_forms import RegistrationForm
 from django.shortcuts import redirect
 from lsd.controlers.TreeJSON import TreeJSON
-from Bio import Phylo
-from Bio import Nexus
 import math
-
+import logging
 
 # Create your views here.
 from django.http import HttpResponse
@@ -24,21 +23,35 @@ def index(request):
     return  render(request, 'lsd/new_run.html', context)
 
 def submit_run(request):
-    r = LSDRunParser.parse(request)
-    r.save()
-    if request.user.is_authenticated():
-        r.run_user=request.user
-        r.save()
-    jid=submitLSD.delay(r.id)
 
-    context = {
-        'status' : "Pending",
-        'statusshort': r.run_status,
-        'jid'    : jid,
-        'times'  : 1,
-        'refresh': 2,
-    }
-    return  render(request, 'lsd/wait_run.html', context)
+    try:
+        r = LSDRunParser.parse(request)
+        r.save()
+    except RunParserException as e:
+        context = {
+            'error' : e.message+" : "+e.errors
+        }
+        return  render(request, 'lsd/new_run.html', context)
+    except:
+        logging.exception("message")
+        context = {
+            'error' : "Some information is missing"
+        }
+        return  render(request, 'lsd/new_run.html', context)
+    else:
+        if request.user.is_authenticated():
+	    r.run_user=request.user
+	    r.save()
+	jid=submitLSD.delay(r.id)
+	
+	context = {
+	    'status' : "Pending",
+	    'statusshort': r.run_status,
+	    'jid'    : jid,
+	    'times'  : 1,
+	    'refresh': 2,
+	}
+	return  render(request, 'lsd/wait_run.html', context)
 
 def create_account(request):
     if request.user.is_authenticated():
@@ -93,16 +106,15 @@ def check_run(request):
         treeData = []
         treeDateData = []
 
-        if 'pdf' in request.GET and (int)(request.GET['pdf'])<len( r.resulttree_set.all()):
-            t = r.resulttree_set.all()[(int)(request.GET['pdf'])]
-            imagehex64_2=TreeRenderer.renderNexus(t.result_nexus, 1200,True)
+        if 'png' in request.GET and (int)(request.GET['png'])<len( r.resulttree_set.all()):
+            t = r.resulttree_set.all()[(int)(request.GET['png'])]
+            imagehex64_2=TreeRenderer.renderNexus_own(t.result_nexus, 1200)
             res = HttpResponse(imagehex64_2)
-            res['Content-Type'] = 'application/pdf'
-            res['Content-Disposition'] = 'attachment; filename=tree.pdf'
+            res['Content-Type'] = 'image/png'
+            res['Content-Disposition'] = 'attachment; filename=tree.png'
             return res
 
         if 'json' in request.GET and (int)(request.GET['json'])<len(r.resulttree_set.all()):
-            print "COUCOU 2"
             t = r.resulttree_set.all()[(int)(request.GET['json'])]
             treestring = "#NEXUS\nBegin trees;\ntree 1 = "+t.result_nexus+"\nEnd;\n"
             nexusIO = Nexus.Nexus.Nexus(treestring)
@@ -113,12 +125,29 @@ def check_run(request):
             # res['Content-Disposition'] = 'attachment; filename=tree.json'
             return res
 
-        for t in r.resulttree_set.all():
-            #imagehex64=TreeRenderer.renderNewick(t.result_newick,400,False)
-            imagehex64_2=TreeRenderer.renderNexus_own(t.result_nexus, 1000,False)
+        if 'nexus' in request.GET and (int)(request.GET['nexus'])<len(r.resulttree_set.all()):
+            t = r.resulttree_set.all()[(int)(request.GET['nexus'])]
+            treestring = "#NEXUS\nBegin trees;\ntree 1 = "+t.result_nexus+"\nEnd;\n";
+            res = HttpResponse(treestring)
+            res['Content-Type'] = 'text/plain'
+            res['Content-Disposition'] = 'attachment; filename=tree.nexus'
+            return res
+
+        
+        if 'newick' in request.GET and (int)(request.GET['newick'])<len(r.resulttree_set.all()):
+            t = r.resulttree_set.all()[(int)(request.GET['newick'])]
+            treestring = t.result_nexus
+            res = HttpResponse(treestring)
+            res['Content-Type'] = 'text/plain'
+            # res['Content-Disposition'] = 'attachment; filename=tree.json'
+            return res
+        
+        # for t in r.resulttree_set.all():
+        #     #imagehex64=TreeRenderer.renderNewick(t.result_newick,400,False)
+        #     imagehex64_2=TreeRenderer.renderNexus_own(t.result_nexus, 1000,False)
             
-            #treeData.append(imagehex64)
-            treeDateData.append(imagehex64_2)
+        #     #treeData.append(imagehex64)
+        #     treeDateData.append(imagehex64_2)
 
         context = {
             'status'     : "Finished",
@@ -126,10 +155,11 @@ def check_run(request):
             'lsdrun'     : r,
             'trees'      : r.resulttree_set.all(),
             'treeimages' : treeData,
-            'treedateimages' : treeDateData,
+            #'treedateimages' : treeDateData,
             'output'     : r.run_out_message,
             'error'      : r.run_err_message,
-            'jid'        : jid
+            'jid'        : jid,
+            'baseurl'       : request.build_absolute_uri()
         }
         return  render(request, 'lsd/display_run.html', context)
 

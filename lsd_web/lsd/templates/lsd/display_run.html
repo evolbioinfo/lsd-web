@@ -3,7 +3,6 @@
 {% block content %}
 <h1>LSD Run Results</h1>
 
-<div class="container">
   <div class="row">
     <div class="col-sm-1 col-title">
       <p>Status</p>
@@ -14,6 +13,50 @@
   </div>
 
   <div class="row">
+    <div class="col-sm-1 col-title">
+      <p>Tree</p>
+    </div>
+    <div class="col-sm-11">
+      <div class="resulttree">
+	<!-- <img src="data:image/png;base64,{{image}}"/> -->
+	<div class="canvaswrapper">
+	  <canvas class="tree_canvas" data-newick-url="{% url 'lsd:check_run' %}?jid={{jid}}&newick=0"></canvas>
+	</div>
+      </div>
+    </div>
+  </div>
+
+
+  <div class="row">
+    <div class="col-sm-1 col-title">
+      <p>Export</p>
+    </div>
+    <div class="col-sm-11">
+      <div>
+	<a class="label label-info" href="{% url 'lsd:check_run' %}?jid={{jid}}&png=0">png</a>
+	<a class="label label-warning" href="{% url 'lsd:check_run' %}?jid={{jid}}&nexus=0">nexus</a>
+	<span class="dropdown">
+	  <a class="label label-success dropdown-toggle" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+	    share
+	  </a>
+	  <div class="dropdown-menu" aria-labelledby="dropdownMenu1" style="width:200px;">
+	    <div class="form-group has-feedback">
+	    <label class="control-label">Copy URL</label>
+	    <input type="text" class="form-control input-sm" value="{{ baseurl }}" placeholder="Username" id="copyurl"/>
+	    <span class="glyphicon glyphicon-copy form-control-feedback" id="copyurlglyph"></span>
+	    <div class="alert alert-success alert-dismissible fade in" role="alert" id="copyalert">
+	      <span id="copyresult"></span>
+	    </div>
+	    </div>
+	  </div>
+	</span>
+	
+      </div>
+    </div>
+  </div>
+
+  
+    <div class="row">
     <div class="col-sm-1 col-title">
       <p>Messages</p>
     </div>
@@ -36,40 +79,5 @@
       </div>
     </div>
   </div>
-
-  <div class="row">
-    <div class="col-sm-1 col-title">
-      <p>Export</p>
-    </div>
-    <div class="col-sm-11">
-      {% for image in treedateimages %}
-      <div>
-	<a class="label label-info" href="{% url 'lsd:check_run' %}?jid={{jid}}&pdf={{forloop.counter0}}">pdf</a>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-
-  <div class="row">
-    <div class="col-sm-1 col-title">
-      <p>Tree</p>
-    </div>
-    <div class="col-sm-11">
-      {% if not treeimages and not treedateimages %}
-      No results to show
-      {% else %}
-      {% for image in treedateimages %}
-      <div class="resulttree">
-	<!-- <img src="data:image/png;base64,{{image}}"/> -->
-	<div class="canvaswrapper">
-	  <canvas class="tree_canvas" data-url="{% url 'lsd:check_run' %}?jid={{jid}}&json={{forloop.counter0}}"></canvas>
-	</div>
-      </div>
-      {% endfor %}
-      {% endif %}
-    </div>
-  </div>
-</div>
-
 
 {% endblock %}

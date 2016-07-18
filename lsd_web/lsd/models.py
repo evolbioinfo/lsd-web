@@ -21,15 +21,17 @@ class LSDRun(models.Model):
     run_root_date        = models.FloatField(default=0)
     run_tips_date        = models.FloatField(default=1)
     run_constraints      = models.BooleanField(default=False)
+    run_with_conf_int    = models.BooleanField(default=False)
+    run_nb_samples       = models.IntegerField(default=0)
     run_variance         = models.BooleanField(default=False)
     run_seq_length       = models.IntegerField(default=1000)
-    run_param_variance   = models.FloatField(default=10)
+    run_param_variance   = models.IntegerField(default=10)
     run_rooting_method   = models.CharField(max_length=10)
     run_rate_lower_bound = models.FloatField(default=0.00001)
     run_name             = models.CharField(max_length=100, default="No Name")
     run_status           = models.CharField(max_length=1,default=PENDING, choices=RUNSTATUS)
-    run_err_message      = models.CharField(max_length=1000,default="")
-    run_out_message      = models.CharField(max_length=1000,default="")
+    run_err_message      = models.CharField(max_length=2000,default="")
+    run_out_message      = models.CharField(max_length=2000,default="")
     run_outpath          = models.CharField(max_length=1000,default="")
     run_user             = models.ForeignKey(User, null=True, blank=True, default = None)
 
@@ -52,7 +54,7 @@ class RunTaxonDates(models.Model):
         on_delete=models.CASCADE
     )
     taxon_name = models.CharField(max_length=300)
-    taxon_date = models.FloatField()
+    taxon_date = models.CharField(max_length=300)
 
 class RunOutGroups(models.Model):
     lsd_run    = models.ForeignKey(
