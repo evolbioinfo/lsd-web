@@ -74,6 +74,9 @@ pre.terminal-messages{
   float:right;
 }
 
+#loggeduser {
+    float:right;
+}
 
 .glyphicon-right {
   float:right;

@@ -28,7 +28,7 @@
           <div class="container">
               <div class="logo">
                   <img src="{% static "lsd/PasteurTheme/images/logo.jpg"%}">
-                      </div>
+              </div>
               <div class="elementItem">
                   <nav class="navbar navbar-default">
                       <div class="container-fluid">
@@ -46,7 +46,10 @@
                           </div> 
                       </div> 
                   </nav> 
-              </div> 
+		  {% if user.is_authenticated %}
+		  <div id="loggeduser"><span class="glyphicon glyphicon-user"></span>Logged as {{ user.first_name }} {{ user.last_name }}</div>
+		  {% endif %}
+              </div>
           </div> 
       </div>
       <div class="header-container center">
