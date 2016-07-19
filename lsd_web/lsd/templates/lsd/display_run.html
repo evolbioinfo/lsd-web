@@ -56,7 +56,7 @@
   </div>
 
   
-    <div class="row">
+  <div class="row">
     <div class="col-sm-1 col-title">
       <p>Messages</p>
     </div>
@@ -80,4 +80,12 @@
     </div>
   </div>
 
+  {% if user.is_authenticated %}
+  <h1>Previous LSD Runs</h1>
+  <div class="list-group" id="runlist">
+    {% for run in user.lsdrun_set.all %}
+    <a class="list-group-item" href="{% url 'lsd:check_run' %}?jid={{run.run_name}}">{{run.run_date}}<span class="label label-pill label-{{run.run_status}} ">{{run.run_status}}</span></a>
+    {% endfor %}
+  </div>
+  {% endif %}
 {% endblock %}
