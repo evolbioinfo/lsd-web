@@ -440,7 +440,7 @@ function update_canvas(cache, canvas, height, x_zoom, y_zoom, x_offset, y_offset
 	    var text=cache.labels[l].text;
 	    var txtctx;
 	    if(! cache.label_ctx[l]){
-		txtctx = new TextHorizontalCanvas(ctx, text, "10px Calibri",10);
+		txtctx = new TextHorizontalCanvas(ctx, text, "12px Calibri",12);
 		cache.label_ctx[l] = txtctx;
 	    }else{
 		txtctx = cache.label_ctx[l];
