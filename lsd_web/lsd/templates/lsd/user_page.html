@@ -1,0 +1,12 @@
+{% extends "lsd/base_generic.html" %}
+
+{% block content %}
+  {% if user.is_authenticated %}
+  <h1>Previous Runs</h1>
+  <div class="list-group" id="runlist">
+    {% for run in user.lsdrun_set.all %}
+    <a class="list-group-item" href="{% url 'lsd:check_run' %}?jid={{run.run_name}}">{{run.run_date}}<span class="label label-pill label-{{run.run_status}} ">{{run.run_status}}</span></a>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endblock %}
