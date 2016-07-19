@@ -35,6 +35,12 @@ def new_run(request):
     }
     return  render(request, 'lsd/new_run.html', context)
 
+def user_page(request):
+    context = {
+    
+    }
+    return  render(request, 'lsd/user_page.html', context)
+
 def submit_run(request):
 
     try:

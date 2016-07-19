@@ -47,7 +47,7 @@
                       </div> 
                   </nav> 
 		  {% if user.is_authenticated %}
-		  <div id="loggeduser"><span class="glyphicon glyphicon-user"></span>Logged as {{ user.first_name }} {{ user.last_name }}</div>
+		  <div id="loggeduser"><span class="glyphicon glyphicon-user"></span> Logged as <a href="{% url 'lsd:user' %}">{{ user.first_name }} {{ user.last_name }}</a></div>
 		  {% endif %}
               </div>
           </div> 
