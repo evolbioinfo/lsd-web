@@ -36,7 +36,11 @@
                               <ul class="nav navbar-nav pull-right">
                                   <li><a href="/">Home</a></li>
                                   <li><a href="{% url 'lsd:new_run' %}">Run</a></li>
+				  {% if user.is_authenticated %}
+				  <li><a href="{% url 'django.contrib.auth.views.logout' %}?next={{ request.get_full_path|urlencode }}">Logout</a></li>
+				  {% else %}
                                   <li><a href="{% url 'django.contrib.auth.views.login' %}?next={{ request.get_full_path|urlencode }}">Login</a></li>
+				  {% endif %}
                                   <li><a href="{% url 'lsd:help' %}">Help</a></li>
                               </ul>
                           </div> 
