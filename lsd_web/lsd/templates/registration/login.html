@@ -31,7 +31,7 @@
 <button type="submit" class="btn btn-primary" value="submit">Submit</button>
 <input type="hidden" name="next" value="{{ next }}" />
 </form>
-
+<!-- Remettre un peut en forme -->
 {# Assumes you setup the password_reset view in your URLconf #}
 <p><a href="{% url 'password_reset' %}">Lost password?</a></p>
 <p><a href="{% url 'lsd:create_account' %}">Signup</a></p>

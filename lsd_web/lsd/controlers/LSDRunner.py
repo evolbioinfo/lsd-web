@@ -7,7 +7,8 @@ import re
 class LSDRunner:
     """A runner to launch LSD program"""
     lsdrun = None
-    lsdpath="/home/flemoine/Documents/Projects/lsd-web/lsd-0.3beta/bin/lsd_unix"
+    #lsdpath="/home/flemoine/Documents/Projects/lsd-web/lsd-0.3beta/bin/lsd_unix"
+    lsdpath="/Users/rtorchet/Documents/C3BIProjects/Frederic/lsd-web/lsd-0.3beta/bin/lsd_mac"
     #lsdpath="/Users/flemoine/Documents/Projects/lsd-web/lsd/lsd-0.2/src/lsd"
     def __init__(self,lsdrun):
         self.lsdrun = lsdrun

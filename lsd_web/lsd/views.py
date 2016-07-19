@@ -20,6 +20,19 @@ def index(request):
     context = {
         
     }
+    return  render(request, 'lsd/home.html', context)
+
+def help(request):
+    context = {
+    
+    }
+    return  render(request, 'lsd/help.html', context)
+
+
+def new_run(request):
+    context = {
+    
+    }
     return  render(request, 'lsd/new_run.html', context)
 
 def submit_run(request):

@@ -40,7 +40,7 @@ class UserManager:
 
         # calculating the length
         if len(password) < 8:
-            self.error_message="password too short (<8)"
+            self.error_message="password too short (< 8)"
             return False
         
         # searching for digits
@@ -53,9 +53,5 @@ class UserManager:
             self.error_message="password does not contain uppercase and lowercase letters"
             return False
 
-        # searching for symbols
-        if re.search(r"[ !#$%&'()*+,-./[\\\]^_`{|}~"+r'"]', password) is None:
-            self.error_message="password does not contain symbols"
-            return False
 
         return True

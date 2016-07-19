@@ -34,10 +34,10 @@
                       <div class="container-fluid">
                            <div class="collapse navbar-collapse" id="navigation">
                               <ul class="nav navbar-nav pull-right">
-                                  <li><a href="#">Home</a></li>
-                                  <li><a href="{% url 'lsd:index' %}">Run</a></li>
+                                  <li><a href="/">Home</a></li>
+                                  <li><a href="{% url 'lsd:new_run' %}">Run</a></li>
                                   <li><a href="{% url 'django.contrib.auth.views.login' %}?next={{ request.get_full_path|urlencode }}">Login</a></li>
-                                  <li><a href="#paginationBox">Help</a></li>
+                                  <li><a href="{% url 'lsd:help' %}">Help</a></li>
                               </ul>
                           </div> 
                       </div> 
@@ -47,8 +47,8 @@
       </div>
       <div class="header-container center">
           <div class="container">
-              <h1> LSD
-                  <div class="subtitle">Least Squares Dating</div>
+              <h1> Least Squares Dating
+                  <div class="subtitle">LSD Web application</div>
               </h1> 
           </div> 
       </div>
