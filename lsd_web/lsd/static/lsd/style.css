@@ -82,6 +82,11 @@ pre.terminal-messages{
   float:right;
 }
 
+.subaffiliation{
+    width:100%;
+    text-align:center;
+}
+
 /* #copyurlglyph { */
 /*     pointer-events: initial;  /\* or - auto // or -  unset  *\/ */
 /*     cursor:pointer; */
