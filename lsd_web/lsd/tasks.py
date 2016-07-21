@@ -10,14 +10,14 @@ from lsd.controlers.LSDRunner import LSDRunner
 from celery.exceptions import SoftTimeLimitExceeded
 
 @shared_task
-def submitLSD(lsdrunid):
+def submitLSD(lsdrunid,lsdpath):
     try:
         lsdrun = LSDRun.objects.get(id=lsdrunid)
         lsdrun.run_name=submitLSD.request.id
         lsdrun.run_status=lsdrun.RUNNING
         lsdrun.save();
 
-        runner=LSDRunner(lsdrun)
+        runner=LSDRunner(lsdrun,lsdpath)
         out = runner.run()
         lsdrun.run_status=lsdrun.FINISHED
         

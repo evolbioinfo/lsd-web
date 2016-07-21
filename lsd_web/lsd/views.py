@@ -12,6 +12,7 @@ from django.shortcuts import redirect
 from lsd.controlers.TreeJSON import TreeJSON
 import math
 import logging
+import os
 
 # Create your views here.
 from django.http import HttpResponse
@@ -61,8 +62,8 @@ def submit_run(request):
         if request.user.is_authenticated():
 	    r.run_user=request.user
 	    r.save()
-	jid=submitLSD.delay(r.id)
-	
+	lsdpath = os.getenv('LSDPATH') 
+	jid=submitLSD.delay(r.id,lsdpath)
 	context = {
 	    'status' : "Pending",
 	    'statusshort': r.run_status,

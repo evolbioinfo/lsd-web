@@ -7,11 +7,10 @@ import re
 class LSDRunner:
     """A runner to launch LSD program"""
     lsdrun = None
-    #lsdpath="/home/flemoine/Documents/Projects/lsd-web/lsd-0.3beta/bin/lsd_unix"
-    lsdpath="/Users/rtorchet/Documents/C3BIProjects/Frederic/lsd-web/lsd-0.3beta/bin/lsd_mac"
-    #lsdpath="/Users/flemoine/Documents/Projects/lsd-web/lsd/lsd-0.2/src/lsd"
-    def __init__(self,lsdrun):
+    lsdpath = None
+    def __init__(self,lsdrun,lsdpath):
         self.lsdrun = lsdrun
+        self.lsdpath = lsdpath
 
     def run(self):
         options = []
@@ -83,6 +82,7 @@ class LSDRunner:
         options.append(outputFile)
 
         # We launch the process
+        print [self.lsdpath]+options
         proc = Popen([self.lsdpath]+options, stdout=PIPE, stderr=PIPE)
         out, err = proc.communicate()
         #streamdata = proc.communicate()[0]
@@ -93,7 +93,6 @@ class LSDRunner:
         self.lsdrun.run_out_message=self.lsdrun.run_out_message[-2000:]
         self.lsdrun.run_err_message=self.lsdrun.run_err_message[-2000:]
 
-        print [self.lsdpath]+options
         self.lsdrun.save()
 
         resDateFileName = outputFile+".date.newick"
