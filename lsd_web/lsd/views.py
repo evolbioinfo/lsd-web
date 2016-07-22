@@ -98,9 +98,15 @@ def check_run(request):
     times = 1;
     if 'times' in request.GET:
         times = request.GET['times'];
-        
-    r = LSDRun.objects.get(run_name=jid)
 
+    try:
+        r = LSDRun.objects.get(run_name=jid)
+    except:
+        logging.exception("message")
+        context = {
+            'error' : "The run \""+str(jid)+"\" does not exist"
+        }
+        return  render(request, 'lsd/error_generic.html', context)
 
     if r.run_status == r.RUNNING:
         context = {
@@ -161,13 +167,6 @@ def check_run(request):
             res['Content-Type'] = 'text/plain'
             # res['Content-Disposition'] = 'attachment; filename=tree.json'
             return res
-        
-        # for t in r.resulttree_set.all():
-        #     #imagehex64=TreeRenderer.renderNewick(t.result_newick,400,False)
-        #     imagehex64_2=TreeRenderer.renderNexus_own(t.result_nexus, 1000,False)
-            
-        #     #treeData.append(imagehex64)
-        #     treeDateData.append(imagehex64_2)
 
         context = {
             'status'     : "Finished",
@@ -175,7 +174,6 @@ def check_run(request):
             'lsdrun'     : r,
             'trees'      : r.resulttree_set.all(),
             'treeimages' : treeData,
-            #'treedateimages' : treeDateData,
             'output'     : r.run_out_message,
             'error'      : r.run_err_message,
             'jid'        : jid,

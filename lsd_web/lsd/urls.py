@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'^submit_run$', views.submit_run, name='submit_run'),
     url(r'^check_run$', views.check_run, name='check_run'),
     url(r'^create_account$', views.create_account, name='create_account'),
+    url(r'^accounts/profile.*$', views.user_page, name='create_account'),
     url(r'^help$', views.help, name='help'),
     url(r'^user$', views.user_page, name='user')
 ]
