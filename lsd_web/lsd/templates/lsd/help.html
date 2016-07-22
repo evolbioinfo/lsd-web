@@ -1,9 +1,10 @@
 {% extends "lsd/base_generic.html" %}
+{% load staticfiles %}
 
 {% block content %}
 <h1>Introduction</h1>
 
-LSD-Web compute dates on internal nodes of a phylogeny and visualize the results. To do so, it uses <a href="https://github.com/tothuhien/lsd-0.3beta">LSD</a>. Several scenario are possible, depending on the aim of the anlysis:
+LSD-Web computes dates of internal nodes of a phylogeny and visualizes the results. To do so, it uses <a href="https://github.com/tothuhien/lsd-0.3beta">LSD</a>. Several scenario are possible, depending on the aim of the anlysis:
 
 <ul>
   <li>Dating ancestral nodes</li>
@@ -11,5 +12,146 @@ LSD-Web compute dates on internal nodes of a phylogeny and visualize the results
   <li>Rerooting the tree</li>
 </ul>
 
+<h1>Examples</h1>
+<h2>Unrooted tree without outgroup</h2>
+One simple usage of LSD-Web would be to compute dates on a simple tree. For example, let us take <a target="blank" href="{% static "lsd/examples/unrooted_tree_without_outgroups/Dengue.phy_phyml_tree.txt" %}">this</a> tree in newick format, and <a target="blank" href="{% static "lsd/examples/unrooted_tree_without_outgroups/Dengue.date" %}">this</a> date file.
+
+The tree represents the phylogeny of the Dengue virus. It is unrooted, has no outgroup, and looks like this:
+<div style="text-align:center;"><img src="{% static "lsd/examples/unrooted_tree_without_outgroups/Dengue.png" %}"/></div>
+
+The date file contains information on known dates of the tips of the tree:
+<pre style="width:40%;margin-left:auto;margin-right:auto;">
+17
+Brazi82 1982
+ElSal83 1983
+ElSal94 1994
+Indon76 1976
+Indon77 1977
+Mexico84        1984
+NewCal84        1984
+Philip64        1964
+Philip56        1956
+Philip84        1984
+PRico86 1986
+SLanka78        1978
+Tahiti79        1979
+Tahiti85        1985
+Thai63  1963
+Thai78  1978
+Thai84  1984
+</pre>
+
+<p>In this example, all tips have a date. It is worth noting that some species may have no date.</p>
+
+<p>On the <a href="{% url 'lsd:new_run' %}">run</a> page, you should first upload the tree file on the section "Choose input tree file". LSD-Web will then analyze the tree, and detect that it is unrooted. It will propose to root it using an outgroup. In our specific case, we do not have any so we leave the radio button "No" selected (LSD will estimate the root on the whole tree).</p>
+
+<p>Once the tree has been analyzed, we can specify if we have a date file or not. Here we have one, so we can select it.</p>
+
+<p>Then, we can choose if we want to compute confidence intervals for estimated dates or not. The confidence interval estimation is generally slower since it involves running several times LSD algorithm (basically 100 runs). We can leave the checkbox checked.</p>
+
+<p>We may enter the supposed substitution rate for the tree. If we leave blank, LSD will estimate it.</p>
+
+<p>Finally, we should enter the length of the alignment that have been used to reconstruct the tree (1000 in our case).</p>
+
+<p>Once you click on submit, a new job is created and added in the computing queue, waiting for its execution. It may be in "pending" state until the server finished previous jobs.</p>
+
+<p>
+  As soon as the job has finished, the result page should be displayed with an interactive visualization panel. This panel has three main options:
+  <ul>
+    <li>mouse wheel: will expend/reduce vertically the tree;</li>
+    <li>click and move: will move the view up and down;</li>
+    <li>click on a node/tip: will select the node, and display informations about it.</li>
+  </ul>
+</p>
+
+In the visualization panel, by clicking buttons in the "Export" section, it is possible to download the tree in 2 formats:
+  <ul>
+    <li>nexus: Readable by different tree visualization softwares such as <a href="http://tree.bio.ed.ac.uk/software/figtree/">FigTree</a>;</li>
+    <li>png: Image file of the whole tree (may have a very big height if the tree has many taxa).</li>
+  </ul>
+  
+<h2>Unrooted tree with outgroup</h2>
+Let us take <a target="blank" href="{% static "lsd/examples/unrooted_tree_with_outgroups/h1n1_cleaned_original_phyml_tree.txt" %}">this</a> tree in newick format, and <a target="blank" href="{% static "lsd/examples/unrooted_tree_with_outgroups/h1n1_cleaned.date" %}">this</a> date file.
+
+This tree represents the phylogeny of the H1N1 virus. It is unrooted, has an outgroup ("H1N2/Swine/hongkong"), and looks like this:
+<div style="text-align:center;"><img style="width:70%;" src="{% static "lsd/examples/unrooted_tree_with_outgroups/h1n1.png" %}"/></div>
+
+The date file contains information on known dates of the tips of the tree:
+<pre style="width:40%;margin-left:auto;margin-right:auto;">
+892     
+A/Mexico/4115/2009|2009.266     2009.38692592593
+A/Mexico/4269/2009|2009.288     2009.288
+A/Mexico/4604/2009|2009.299     2009.39135
+A/Scotland/91800799/2009|2009.312       2009.49094520548
+A/Canada-PQ/RV1586/2009|2009.318        2009.39775
+A/Mexico/InDRE13547/2009|2009.321       2009.321
+A/Canada-AB/RV1531/2009|2009.323        2009.323
+A/Paris/2573/2009|2009.326      2009.326
+A/Paris/2590/2009|2009.329      2009.329
+A/Canada-AB/RV1644/2009|2009.332        2009.332
+A/Italy/05/2009|2009.337        2009.337
+A/England/XFL00275/2009|2009.342        2009.342
+A/Thailand/104/2009|2009.345    2009.3425
+A/Missouri/04/2009|2009.356     2009.356
+...
+</pre>
+
+<p>Here we will follow the same steps as previously, with the exception of the rooting step. Once the tree is loaded, LSD-Web should tell that the tree is unrooted. Here we will click on "YES", to reroot the tree using an outgroup. A text field should be displayed, allowing us to select the taxa belonging to the outgroup (here we only select "H1N2/Swine/hongkong...". For other cases, it may be useful to select more taxa, in which case LSD-Web will automatically add all the tips of the tree that descend from the common ancestor of all the selected species.</p>
+
+<h1>Rooted tree</h1>
+If the tree is rooted, LSD web will not have to estimate the position of the root. Let us take <a target="blank" href="{% static "lsd/examples/rooted_tree/h1n1_cleaned_original_phyml_tree_ingroup.txt" %}">this</a> tree in newick format, and <a target="blank" href="{% static "lsd/examples/rooted_tree/h1n1_cleaned.date" %}">this</a> date file.
+
+This tree represents the rooted phylogeny of the H1N1 virus:
+<div style="text-align:center;"><img style="width:70%;" src="{% static "lsd/examples/rooted_tree/h1n1.png" %}"/></div>
+
+The date file contains information on known dates of the tips of the tree:
+<pre style="width:40%;margin-left:auto;margin-right:auto;">
+892     
+A/Mexico/4115/2009|2009.266     2009.38692592593
+A/Mexico/4269/2009|2009.288     2009.288
+A/Mexico/4604/2009|2009.299     2009.39135
+A/Scotland/91800799/2009|2009.312       2009.49094520548
+A/Canada-PQ/RV1586/2009|2009.318        2009.39775
+A/Mexico/InDRE13547/2009|2009.321       2009.321
+A/Canada-AB/RV1531/2009|2009.323        2009.323
+A/Paris/2573/2009|2009.326      2009.326
+A/Paris/2590/2009|2009.329      2009.329
+A/Canada-AB/RV1644/2009|2009.332        2009.332
+A/Italy/05/2009|2009.337        2009.337
+A/England/XFL00275/2009|2009.342        2009.342
+A/Thailand/104/2009|2009.345    2009.3425
+A/Missouri/04/2009|2009.356     2009.356
+...
+</pre>
+
+<p>Here we will follow the same steps as previously, and select "NO" for rerooting the tree.</p>
+
+
+<h1>File formats</h1>
+<p>It is important to describe in more detail the input file formats, and particularly the date file.</p>
+
+<p>Dates (or temporal constraints) must be provided in a file having the following format:
+  <ul>
+    <li>Line 1: Number of lines in the file (number of dates)</li>
+    <li>Other lines: 2 informations separated by a tabulation:</li>
+    <ol>
+      <li>Node</li>
+      <li>Date/Temporal constraint of the node</li>
+    </ol>
+  </ul>
+</p>
+
+<p>
+  Dates and nodes may be specified as follows. An internal node can be defined either by its label (given in the input tree) or by a subset of tips that have it as the most recent common ancestor (mrca). A temporal constraint can be a real, or a lower bound l(value), or an upper bound u(value), or an interval b(v1,v2). For example, if the input tree has 4 taxa a,b,c,d, and an internal node named in, then following is a possible date file:
+  <pre style="width:40%;margin-left:auto;margin-right:auto;" >
+  6
+  a l(2003)
+  b u(2007)
+  c 2005
+  d b(2001,2007)
+  mrca(a,b,c,d) b(2000,2001)
+  in l(2004)
+  </pre>
+</p>
 
 {% endblock %}
