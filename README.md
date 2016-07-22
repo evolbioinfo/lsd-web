@@ -20,8 +20,8 @@ docker run -d -p 8888:80 lsdweb
 
 The last command will start the container `lsdweb` in background. The webservice will be accessible through the port `8888` of localhost. You can then open your browser to (http://localhost:8888).
 
-## MacOS
-If you are under macos, docker runs using virtualbox. Before starting the container, you should redirect the port 8888 of your macos host to the port 8888 of the linux machine.
+## MacOS (Docker toolbox)
+If you are running Docker toolbox under macos, docker should run using virtualbox. In that case, before starting the container, you should redirect the port 8888 of your macos host to the port 8888 of the linux machine.
 
 To do so, first get the name of the running virtual machine:
 
@@ -41,3 +41,5 @@ Now, you can start the docker container:
 ```
 docker run -d -p 8888:80 lsdweb 
 ```
+
+## Windows
