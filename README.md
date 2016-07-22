@@ -9,7 +9,7 @@ To build a docker machine, you first need to install [docker](https://docs.docke
 Then, you can build the lsdweb image:
 
 ```[bash]
-docker build lsdweb .
+docker build -t lsdweb .
 ```
 
 And finally run the container:
