@@ -82,6 +82,7 @@ function new_node(parentNode){
 	    date_max:0,
 	    date_s : "",
 	    brlen : 0,
+	    brsup : 0,
 	    tax : ""}
 }
 
@@ -97,7 +98,11 @@ function to_newick_recur(tree){
     var output =  "(";
     for(i=0; i<tree.suc.length;i++){
 	if(i>0) output += ",";
-	output += to_newick_recur(tree.suc[i])+":"+tree.suc[i].brlen;
+	if(tree.suc[i].brsup!=0){
+	    output += to_newick_recur(tree.suc[i])+tree.suc[i].brsup+":"+tree.suc[i].brlen;
+	}else{
+	    output += to_newick_recur(tree.suc[i])+":"+tree.suc[i].brlen;
+	}
     }
     output += ")";
     return(output);
@@ -114,8 +119,9 @@ function parse_newick(newick_str, curnode, pos, level){
     var children = 0;
     var match;
     while(pos < newick_str.length){
-	var matchDate = newick_str.substr(pos).match(/^\[&date=(\d+(\.\d+){0,1})\]/);
-	var matchBrlen = newick_str.substr(pos).match(/^\:(\d+(\.\d+){0,1}(e-\d+){0,1})/);
+	var matchDate = newick_str.substr(pos).match(/^\[&date=(\d+(?:\.\d+){0,1})\]/);
+	var matchSupport = newick_str.substr(pos).match(/^(\d+(?:\.\d+){0,1}(?:e-\d+){0,1})(?:\:|\[)/);
+	var matchBrlen = newick_str.substr(pos).match(/^\:(\d+(?:\.\d+){0,1}(?:e-\d+){0,1})/);
 	if(pos==0 && newick_str.substr(pos,1) != "("){
 	    throw new NewickException("Newick file does not start with a \"(\" (Maybe not a Newick file?)");
 	}
@@ -163,15 +169,20 @@ function parse_newick(newick_str, curnode, pos, level){
 		pos += matchCI[0].length;
 	    }
 	} else if(matchBrlen != null){
-	    // console.log(matchBrlen[0]);
 	    if(level == 0){
-		curnode.brlen = parseFloat(matchBrlen[1]);		
+		curnode.brlen = parseFloat(matchBrlen[1]);
 	    }else{
 		curnode.suc[children-1].brlen = parseFloat(matchBrlen[1]);
 	    }
-	    pos+=matchBrlen[0].length;
-	} else if(newick_str.substr(pos,1) == ";"){
-	    // console.log("pos "+pos+" End tree"+" level: "+level);
+	    pos += matchBrlen[0].length;
+	} else if(matchSupport){
+	    if(level==0){
+		curnode.brsup = parseFloat(matchSupport[1]);
+	    }else{
+		curnode.suc[children-1].brsup = parseFloat(matchSupport[1]);
+	    }
+	    pos += (matchSupport[0].length - 1);
+	}else if(newick_str.substr(pos,1) == ";"){
 	    if(level!=0){
 		throw new NewickException("Mismatched parentheses in Newick File (Maybe not a Newick file?)");
 	    }
@@ -187,6 +198,7 @@ function parse_newick(newick_str, curnode, pos, level){
 	    lastnode.date_s = "";
 	    lastnode.date_n = 0.0;
 	    lastnode.brlen = 0.0;
+	    lastnode.brsup = 0.0;
 	    curnode.suc[children] = lastnode;
 	    children++;
 	    pos += match[0].length;
