@@ -6,129 +6,57 @@
 <div id="toc">
 </div>
 
+<div id="help">
 <h2>Introduction</h2>
 
 LSD-Web computes dates of internal nodes of a phylogeny and visualizes the results. To do so, it uses <a href="https://github.com/tothuhien/lsd-0.3beta">LSD</a>. Several scenario are possible, depending on the aim of the anlysis:
 
 <ul>
-  <li>Dating ancestral nodes</li>
-  <li>Computing confidence intervals on nodes</li>
-  <li>Rerooting the tree</li>
+  <li>Dating ancestral nodes;</li>
+  <li>Computing confidence intervals on nodes;</li>
+  <li>Rerooting the tree.</li>
 </ul>
 
-<h2>Examples</h2>
-<h3>Unrooted tree without outgroup</h3>
-One simple usage of LSD-Web would be to compute dates on a simple tree. For example, let us take <a target="blank" href="{% static "lsd/examples/unrooted_tree_without_outgroups/Dengue.phy_phyml_tree.txt" %}">this</a> tree in newick format, and <a target="blank" href="{% static "lsd/examples/unrooted_tree_without_outgroups/Dengue.date" %}">this</a> date file.
-
-The tree represents the phylogeny of the Dengue virus. It is unrooted, has no outgroup, and looks like this:
-<div style="text-align:center;"><img src="{% static "lsd/examples/unrooted_tree_without_outgroups/Dengue.png" %}"/></div>
-
-The date file contains information on known dates of the tips of the tree:
-<pre style="width:40%;margin-left:auto;margin-right:auto;">
-17
-Brazi82 1982
-ElSal83 1983
-ElSal94 1994
-Indon76 1976
-Indon77 1977
-Mexico84        1984
-NewCal84        1984
-Philip64        1964
-Philip56        1956
-Philip84        1984
-PRico86 1986
-SLanka78        1978
-Tahiti79        1979
-Tahiti85        1985
-Thai63  1963
-Thai78  1978
-Thai84  1984
-</pre>
-
-<p>In this example, all tips have a date. It is worth noting that some species may have no date.</p>
-
-<p>On the <a href="{% url 'lsd:new_run' %}">run</a> page, you should first upload the tree file on the section "Choose input tree file". LSD-Web will then analyze the tree, and detect that it is unrooted. It will propose to root it using an outgroup. In our specific case, we do not have any so we leave the radio button "No" selected (LSD will estimate the root on the whole tree).</p>
-
-<p>Once the tree has been analyzed, we can specify if we have a date file or not. Here we have one, so we can select it.</p>
-
-<p>Then, we can choose if we want to compute confidence intervals for estimated dates or not. The confidence interval estimation is generally slower since it involves running several times LSD algorithm (basically 100 runs). We can leave the checkbox checked.</p>
-
-<p>We may enter the supposed substitution rate for the tree. If we leave blank, LSD will estimate it.</p>
-
-<p>Finally, we should enter the length of the alignment that have been used to reconstruct the tree (1000 in our case).</p>
-
+<h2>Usage</h3>
+<h3>Setting up analysis</h3>
+Analyzes are launched on the <a href="{% url 'lsd:new_run' %}">run</a> page.
+<ol>
+  <li><b>Uploading input tree:</b> You should first upload the tree file in newick format on the section "Choose input tree file". LSD-Web will then analyze the tree and detect if it is rooted or not.
+  </li>
+  <li><b>Rerooting the tree:</b>  Two possibilities:
+    <ul>
+      <li>If it is rooted, LSD will propose to reroot the tree using an outgroup, to leave the tree as is, to reestimate the root around the given root, or to reestimate the root searching on all branches of the tree;</li>
+      <li>If it is not rooted, LSD will propose to root it using an outgroup. If "no" is checked, then LSD will reestimate the root on the whole tree.</li>
+    </ul>
+    If you want to reroot the tree using an outgroup, a text field should be displayed that allows you to select the taxa belonging to the outgroup. If you select more than one taxon, LSD-Web will automatically add all the tips of the tree that descend from the common ancestor of all the selected taxa, in order to constitute a monophyletic outgroup. Once you select the first taxon, you may click on "more taxa" to grow the outgroup by going one step deeper in the tree, and taking all tips descending from here (if you select the whole tree as an outgroup, it will alert you that you can not reroot the tree that way).
+</li>
+  <li><b>Setting up dates:</b> If you know dates of individual nodes, you can select "I have a date file", otherwise you can select "I have no date file".
+    <ul>
+      <li>In the case where you have no date file, you can enter the date of the root and the date of the tips of the tree;</li>
+      <li>In the case where you have a date file, you can upload it. The file should be formated as explained in the section "file formats".</li>
+    </ul>
+  </li>
+  <li><b>Confidence intervals:</b> You can then choose if you want to compute confidence intervals for estimated dates or not. The confidence interval estimation is generally slower since it involves running several times LSD algorithm (basically 100 runs).</li>
+  <li><b>Substitution rate:</b> You may enter the supposed substitution rate for the tree. If you leave it blank, LSD will estimate it.</li>
+  <li><b>Sequence length: </b> Finally, you should adapt sequence length of the alignment that have been used to reconstruct the tree (1000 given by default).</li>
+</ol>
+<h3>Submit Job</h3>
 <p>Once you click on submit, a new job is created and added in the computing queue, waiting for its execution. It may be in "pending" state until the server finished previous jobs.</p>
 
-<p>
-  As soon as the job has finished, the result page should be displayed with an interactive visualization panel. This panel has three main options:
+<h3>Results/Visualization</h3>
+<p>As soon as the job has finished, the result page should be displayed with an interactive visualization panel displaying the result tree. This panel has three main options:
   <ul>
-    <li>mouse wheel: will expend/reduce vertically the tree;</li>
-    <li>click and move: will move the view up and down;</li>
-    <li>click on a node/tip: will select the node, and display informations about it.</li>
+    <li>Mouse wheel: will expend/reduce vertically the tree;</li>
+    <li>Click and move: will move the view up and down;</li>
+    <li>Click on a node/tip: will select the node, and display informations about it.</li>
   </ul>
 </p>
 
-In the visualization panel, by clicking buttons in the "Export" section, it is possible to download the tree in 2 formats:
+In the visualization panel, by clicking buttons in the "Export" section, one can download the tree in 2 formats:
   <ul>
     <li>nexus: Readable by different tree visualization softwares such as <a href="http://tree.bio.ed.ac.uk/software/figtree/">FigTree</a>;</li>
     <li>png: Image file of the whole tree (may have a very big height if the tree has many taxa).</li>
   </ul>
-  
-<h3>Unrooted tree with outgroup</h3>
-Let us take <a target="blank" href="{% static "lsd/examples/unrooted_tree_with_outgroups/h1n1_cleaned_original_phyml_tree.txt" %}">this</a> tree in newick format, and <a target="blank" href="{% static "lsd/examples/unrooted_tree_with_outgroups/h1n1_cleaned.date" %}">this</a> date file.
-
-This tree represents the phylogeny of the H1N1 virus. It is unrooted, has an outgroup ("H1N2/Swine/hongkong"), and looks like this:
-<div style="text-align:center;"><img style="width:70%;" src="{% static "lsd/examples/unrooted_tree_with_outgroups/h1n1.png" %}"/></div>
-
-The date file contains information on known dates of the tips of the tree:
-<pre style="width:40%;margin-left:auto;margin-right:auto;">
-892     
-A/Mexico/4115/2009|2009.266     2009.38692592593
-A/Mexico/4269/2009|2009.288     2009.288
-A/Mexico/4604/2009|2009.299     2009.39135
-A/Scotland/91800799/2009|2009.312       2009.49094520548
-A/Canada-PQ/RV1586/2009|2009.318        2009.39775
-A/Mexico/InDRE13547/2009|2009.321       2009.321
-A/Canada-AB/RV1531/2009|2009.323        2009.323
-A/Paris/2573/2009|2009.326      2009.326
-A/Paris/2590/2009|2009.329      2009.329
-A/Canada-AB/RV1644/2009|2009.332        2009.332
-A/Italy/05/2009|2009.337        2009.337
-A/England/XFL00275/2009|2009.342        2009.342
-A/Thailand/104/2009|2009.345    2009.3425
-A/Missouri/04/2009|2009.356     2009.356
-...
-</pre>
-
-<p>Here we will follow the same steps as previously, with the exception of the rooting step. Once the tree is loaded, LSD-Web should tell that the tree is unrooted. Here we will click on "YES", to reroot the tree using an outgroup. A text field should be displayed, allowing us to select the taxa belonging to the outgroup (here we only select "H1N2/Swine/hongkong...". For other cases, it may be useful to select more taxa, in which case LSD-Web will automatically add all the tips of the tree that descend from the common ancestor of all the selected species.</p>
-
-<h3>Rooted tree</h3>
-If the tree is rooted, LSD web will not have to estimate the position of the root. Let us take <a target="blank" href="{% static "lsd/examples/rooted_tree/h1n1_cleaned_original_phyml_tree_ingroup.txt" %}">this</a> tree in newick format, and <a target="blank" href="{% static "lsd/examples/rooted_tree/h1n1_cleaned.date" %}">this</a> date file.
-
-This tree represents the rooted phylogeny of the H1N1 virus:
-<div style="text-align:center;"><img style="width:70%;" src="{% static "lsd/examples/rooted_tree/h1n1.png" %}"/></div>
-
-The date file contains information on known dates of the tips of the tree:
-<pre style="width:40%;margin-left:auto;margin-right:auto;">
-892     
-A/Mexico/4115/2009|2009.266     2009.38692592593
-A/Mexico/4269/2009|2009.288     2009.288
-A/Mexico/4604/2009|2009.299     2009.39135
-A/Scotland/91800799/2009|2009.312       2009.49094520548
-A/Canada-PQ/RV1586/2009|2009.318        2009.39775
-A/Mexico/InDRE13547/2009|2009.321       2009.321
-A/Canada-AB/RV1531/2009|2009.323        2009.323
-A/Paris/2573/2009|2009.326      2009.326
-A/Paris/2590/2009|2009.329      2009.329
-A/Canada-AB/RV1644/2009|2009.332        2009.332
-A/Italy/05/2009|2009.337        2009.337
-A/England/XFL00275/2009|2009.342        2009.342
-A/Thailand/104/2009|2009.345    2009.3425
-A/Missouri/04/2009|2009.356     2009.356
-...
-</pre>
-
-<p>Here we will follow the same steps as previously, and select "NO" for rerooting the tree.</p>
 
 
 <h2>File formats</h2>
@@ -170,5 +98,105 @@ End;
   in l(2004)
   </pre>
 </p>
+  
+<h2>Examples</h2>
+<h3>Unrooted tree without outgroup</h3>
+Let us take <a target="_blank" href="{% static "lsd/examples/unrooted_tree_without_outgroups/Dengue.phy_phyml_tree.txt" %}">this</a> tree in newick format, and <a target="_blank" href="{% static "lsd/examples/unrooted_tree_without_outgroups/Dengue.date" %}">this</a> date file.
 
+The tree represents the phylogeny of the Dengue virus. It is unrooted, has no outgroup, and looks like this:
+<div style="text-align:center;"><img src="{% static "lsd/examples/unrooted_tree_without_outgroups/Dengue.png" %}"/></div>
+
+The date file contains information on known dates of the tips of the tree:
+<pre style="width:40%;margin-left:auto;margin-right:auto;">
+17
+Brazi82 1982
+ElSal83 1983
+ElSal94 1994
+Indon76 1976
+Indon77 1977
+Mexico84        1984
+NewCal84        1984
+Philip64        1964
+Philip56        1956
+Philip84        1984
+PRico86 1986
+SLanka78        1978
+Tahiti79        1979
+Tahiti85        1985
+Thai63  1963
+Thai78  1978
+Thai84  1984
+</pre>
+
+<p>In this example, all tips have a date. It is worth noting that in some cases some species may have no date.</p>
+
+<p>On the <a href="{% url 'lsd:new_run' %}">run</a> page, you can first upload the tree file on the section "Choose input tree file". LSD-Web will then analyze the tree, and detect that it is unrooted. It will propose to root it using an outgroup. In our specific case, we do not have any so we leave the radio button "No" selected (LSD will estimate the root on the whole tree).</p>
+
+<p>Once the tree has been analyzed, you can specify if we have a date file or not. Here we have one, so you can select it.</p>
+
+<p>Then, we can choose if we want to compute confidence intervals for estimated dates or not. The confidence interval estimation is generally slower since it involves running several times LSD algorithm (basically 100 runs). You can leave the checkbox checked.</p>
+
+<p>You may enter the supposed substitution rate for the tree. If you leave it blank, LSD will estimate it.</p>
+
+<p>Finally, you should adapt the length of the alignment that have been used to reconstruct the tree (1000 in our case).</p>
+
+<p>Once you click on submit, a new job is created and added in the computing queue, waiting for its execution. It may be in "pending" state until the server finished previous jobs.</p>
+  
+<h3>Unrooted tree with outgroup</h3>
+Let us take <a target="blank" href="{% static "lsd/examples/unrooted_tree_with_outgroups/h1n1_cleaned_original_phyml_tree.txt" %}">this</a> tree in newick format, and <a target="blank" href="{% static "lsd/examples/unrooted_tree_with_outgroups/h1n1_cleaned.date" %}">this</a> date file.
+
+This tree represents the phylogeny of the H1N1 virus. It is unrooted, has an outgroup ("H1N2/Swine/hongkong"), and looks like this:
+<div style="text-align:center;"><img style="width:70%;" src="{% static "lsd/examples/unrooted_tree_with_outgroups/h1n1.png" %}"/></div>
+
+The date file contains information on known dates of the tips of the tree:
+<pre style="width:40%;margin-left:auto;margin-right:auto;">
+892     
+A/Mexico/4115/2009|2009.266     2009.38692592593
+A/Mexico/4269/2009|2009.288     2009.288
+A/Mexico/4604/2009|2009.299     2009.39135
+A/Scotland/91800799/2009|2009.312       2009.49094520548
+A/Canada-PQ/RV1586/2009|2009.318        2009.39775
+A/Mexico/InDRE13547/2009|2009.321       2009.321
+A/Canada-AB/RV1531/2009|2009.323        2009.323
+A/Paris/2573/2009|2009.326      2009.326
+A/Paris/2590/2009|2009.329      2009.329
+A/Canada-AB/RV1644/2009|2009.332        2009.332
+A/Italy/05/2009|2009.337        2009.337
+A/England/XFL00275/2009|2009.342        2009.342
+A/Thailand/104/2009|2009.345    2009.3425
+A/Missouri/04/2009|2009.356     2009.356
+...
+</pre>
+
+<p>Here we will follow the same steps as previously, with the exception of the rooting step. Once the tree is loaded, LSD-Web should tell that the tree is unrooted. Here you may click on "YES", to reroot the tree using an outgroup. A text field should be displayed, allowing you to select the taxa belonging to the outgroup (here we only select <code>H1N2/Swine/hongkong...</code>).</p>
+
+<h3>Rooted tree</h3>
+If the tree is rooted, LSD web will not have to estimate the position of the root. Let us take <a target="blank" href="{% static "lsd/examples/rooted_tree/h1n1_cleaned_original_phyml_tree_ingroup.txt" %}">this</a> tree in newick format, and <a target="blank" href="{% static "lsd/examples/rooted_tree/h1n1_cleaned.date" %}">this</a> date file.
+
+This tree represents the rooted phylogeny of the H1N1 virus:
+<div style="text-align:center;"><img style="width:70%;" src="{% static "lsd/examples/rooted_tree/h1n1.png" %}"/></div>
+
+The date file contains information on known dates of the tips of the tree:
+<pre style="width:40%;margin-left:auto;margin-right:auto;">
+892     
+A/Mexico/4115/2009|2009.266     2009.38692592593
+A/Mexico/4269/2009|2009.288     2009.288
+A/Mexico/4604/2009|2009.299     2009.39135
+A/Scotland/91800799/2009|2009.312       2009.49094520548
+A/Canada-PQ/RV1586/2009|2009.318        2009.39775
+A/Mexico/InDRE13547/2009|2009.321       2009.321
+A/Canada-AB/RV1531/2009|2009.323        2009.323
+A/Paris/2573/2009|2009.326      2009.326
+A/Paris/2590/2009|2009.329      2009.329
+A/Canada-AB/RV1644/2009|2009.332        2009.332
+A/Italy/05/2009|2009.337        2009.337
+A/England/XFL00275/2009|2009.342        2009.342
+A/Thailand/104/2009|2009.345    2009.3425
+A/Missouri/04/2009|2009.356     2009.356
+...
+</pre>
+
+<p>Here we will follow the same steps as previously, and select "NO" for rerooting the tree.</p>
+
+</div>
 {% endblock %}

@@ -31,6 +31,11 @@
 /*     font-style: italic; */
 /* } */
 
+#help {
+    text-align: justify;
+    text-justify: inter-word;
+}
+
 div#toc {
     border: 1px solid #ccc;
     border-radius: 4px;
