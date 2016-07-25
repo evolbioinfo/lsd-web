@@ -1,15 +1,40 @@
 {% extends "lsd/base_generic.html" %}
+{% load staticfiles %}
 
 {% block content %}
-<h1>Introduction</h1>
 <div>
-
   <p></p>
-
-  <p>If you use this website, please cite :</p>
+  <div class="front-image"></div>
+  <!-- <img class="frontimage" src="{% static "lsd/banner2_tree.png"%}"/> -->
+  <p>
+    <h3>What is LSD?</h3>
+    LSD is designed to estimate dates of nodes in a phylogeny. With LSD, you may:
+    <ul>
+    <li>Date ancestral nodes</li>
+    <li>Compute confidence intervals on nodes</li>
+    <li>Estimate the root</li>
+    </ul>
+  </p>
 
   <p>
-Fast dating using least-squares criteria and algorithms, T-H. To, M. Jung, S. Lycett, O. Gascuel, <a href="http://www.ncbi.nlm.nih.gov/pubmed/26424727">Syst Biol. 2016 Jan;65(1):82-97</a>.
+    <h3>Running LSD</h3>
+    You can try LSD
+  <p><a class="btn btn-primary btn-lg" href="{% url 'lsd:new_run' %}" role="button">RUN LSD</a></p>
   </p>
+  
+  <p>
+    <h3>Citing LSD</h3>
+    If you use this service, please cite :
+    <blockquote class="front-cite">Fast dating using least-squares criteria and algorithms,
+      T-H. To, M. Jung, S. Lycett, O. Gascuel,
+      <a href="http://www.ncbi.nlm.nih.gov/pubmed/26424727">Syst Biol. 2016 Jan;65(1):82-97</a>.</blockquote>
+  </p>
+
+<p>
+  <h3>More information</h3>
+    <a class="btn btn-primary btn-lg" href="{% url 'lsd:help' %}" role="button">Learn more</a></p>
+  </p>
+
+
 </div>
 {% endblock %}

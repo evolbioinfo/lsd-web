@@ -1,3 +1,16 @@
+function toc(){
+    var toc="";
+    $("h2, h3").each(function(i) {
+	var current = $(this);
+	current.attr("id", "title" + i);
+	toc+="<p class='toc-"+current.prop("tagName")+"'><a id='link" + i + "' href='#title" +
+	    i + "' title='" + current.prop("tagName") + "'>" + 
+	    current.html() + "</a></p>";
+    });
+    $("#toc").append('<h2>Table of contents:</h2>')
+    $("#toc").append(toc);
+}
+
 
 function init(){
     $("#copyalert").hide();
@@ -36,7 +49,8 @@ function init(){
 	    $("#copyalert").hide();
 	});
     });
-    
+
+    toc();
 }
 
 $(document).ready(function(){
