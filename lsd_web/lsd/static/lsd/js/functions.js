@@ -6,11 +6,12 @@ function toc(){
 	toc+="<p class='toc-"+current.prop("tagName")+"'><a id='link" + i + "' href='#title" +
 	    i + "' title='" + current.prop("tagName") + "'>" + 
 	    current.html() + "</a></p>";
+	console.log(current.html());
+	current.html('<a class="anchor-title" aria-label="Anchor link for: glyphicons how to use" href="#title'+i+'" class="anchorjs-link ">'+current.html()+'</a>');
     });
     $("#toc").append('<h2>Table of contents:</h2>')
     $("#toc").append(toc);
 }
-
 
 function init(){
     $("#copyalert").hide();

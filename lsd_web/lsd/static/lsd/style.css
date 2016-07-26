@@ -31,6 +31,23 @@
 /*     font-style: italic; */
 /* } */
 
+a.anchor-title{
+    color: inherit;
+    text-decoration: none;
+    margin-left: -1em;
+    padding-left: 15px;
+    background-image: url("link.png");
+    background-size: 0px 0px;
+    background-repeat: no-repeat;
+    background-position: left center;
+}
+
+a.anchor-title:hover{
+    text-decoration: none;
+    color: inherit;
+    background-size: 15px 15px;
+}
+
 #help {
     text-align: justify;
     text-justify: inter-word;
