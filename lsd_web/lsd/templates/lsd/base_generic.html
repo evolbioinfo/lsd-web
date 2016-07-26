@@ -36,18 +36,22 @@
               <div class="elementItem">
                   <nav class="navbar navbar-default">
                       <div class="container-fluid">
-                           <div class="collapse navbar-collapse" id="navigation">
-                              <ul class="nav navbar-nav pull-right">
-                                  <li><a href="/">Home</a></li>
-                                  <li><a href="{% url 'lsd:new_run' %}">Run</a></li>
+                          <div class="navbar-header">
+                              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navigation" aria-expanded="false"> <span class="pull-right">Menu</span> <span class="icon-bar"></span> <span class="icon-bar"></span> <span class="icon-bar"></span>
+                              </button>
+                            </div>
+                          <div style="" aria-expanded="true" class="navbar-collapse collapse in" id="navigation">
+                                  <ul class="nav navbar-nav pull-right">
+                                      <li><a href="/">Home</a></li>
+                                      <li><a href="{% url 'lsd:new_run' %}">Run</a></li>
 				  {% if user.is_authenticated %}
 				  <li><a href="{% url 'django.contrib.auth.views.logout' %}?next={{ request.get_full_path|urlencode }}">Logout</a></li>
 				  {% else %}
-                                  <li><a href="{% url 'django.contrib.auth.views.login' %}?next={{ request.get_full_path|urlencode }}">Login</a></li>
+                                    <li><a href="{% url 'django.contrib.auth.views.login' %}?next={{ request.get_full_path|urlencode }}">Login</a></li>
 				  {% endif %}
-                                  <li><a href="{% url 'lsd:help' %}">Help</a></li>
-                              </ul>
-                          </div> 
+                                    <li><a href="{% url 'lsd:help' %}">Help</a></li>
+                                  </ul>
+                              </div>
                       </div> 
                   </nav> 
 		  {% if user.is_authenticated %}
@@ -101,16 +105,17 @@
             <div class="row">
               <div class="col-md-8 col-sm-8">
                 <ul class="list-inline">
-		  	<li><a target="_blank" href="https://www.pasteur.fr/fr/les-credits">Crédit</a></li>
-                        <li><a target="_blank" href="https://www.pasteur.fr/fr/mentions-legales">Mentions légales</a></li>
-                        <li><a target="_blank" href="https://don.pasteur.fr/netful-presentation-association/site/pasteur/defaut/fr/v2/don/index.html">Faites un don</a></li>
-			<li><a href="https://research.pasteur.fr/en/team/evolutionary-bioinformatics/">Evolutionary Biology Unit - USR 3756 IP - CNRS</a></li><br/>
-                        <li><a target="_blank" href="https://www.facebook.com/InstitutPasteur"><svg class="icon icon-facebook"><use xlink:href="#icon-facebook"></use></svg></a></li>
-                        <li><a target="_blank" href="https://twitter.com/aiderpasteur"><svg class="icon icon-twitter"><use xlink:href="#icon-twitter"></use></svg></a></li>
-                        <li><a target="_blank" href="https://www.linkedin.com/company/institut-pasteur"><svg class="icon icon-linkedin"><use xlink:href="#icon-linkedin"></use></svg></a></li>
-                        <li><a target="_blank" href="https://www.youtube.com/user/institutpasteurvideo"><svg class="icon icon-youtube3"><use xlink:href="#icon-youtube3"></use></svg></a></li>
-                    </ul>
-                </div>
+                    <li><a target="_blank" href="https://www.pasteur.fr/fr/les-credits">Crédit</a></li>
+                    <li><a target="_blank" href="https://www.pasteur.fr/fr/mentions-legales">Mentions légales</a></li>
+                    <li><a target="_blank" href="https://don.pasteur.fr/netful-presentation-association/site/pasteur/defaut/fr/v2/don/index.html">Faites un don</a></li>
+                    <li><a target="_blank" href="https://www.facebook.com/InstitutPasteur"><svg class="icon icon-facebook"><use xlink:href="#icon-facebook"></use></svg></a></li>
+                    <li><a target="_blank" href="https://twitter.com/aiderpasteur"><svg class="icon icon-twitter"><use xlink:href="#icon-twitter"></use></svg></a></li>
+                    <li><a target="_blank" href="https://www.linkedin.com/company/institut-pasteur"><svg class="icon icon-linkedin"><use xlink:href="#icon-linkedin"></use></svg></a></li>
+                    <li><a target="_blank" href="https://www.youtube.com/user/institutpasteurvideo"><svg class="icon icon-youtube3"><use xlink:href="#icon-youtube3"></use></svg></a></li>
+                    <li><a href="https://research.pasteur.fr/en/team/evolutionary-bioinformatics/">Evolutionary Biology Unit - USR 3756 IP - CNRS</a></li>
+                    
+                </ul>
+            </div>
 		<div class="col-md-4 col-sm-4 col-xs-12"> <a target="_blank" href="https://www.pasteur.fr"> <img alt="Institut Pasteur – Fondation d'utilité publique habilitée à recevoir des dons et des legs" src="{% static "lsd/PasteurTheme/images/logo-footer.png"%}"> </a>
                 </div> 
                 <div class="col-md-4 col-sm-8 col-xs-12 footer-nav"> </div> 
