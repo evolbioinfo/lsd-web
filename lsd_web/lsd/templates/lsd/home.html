@@ -4,23 +4,18 @@
 {% block content %}
 <div>
   <p></p>
-  <div class="front-image"></div>
-  <!-- <img class="frontimage" src="{% static "lsd/banner2_tree.png"%}"/> -->
   <p>
     <h3>What is LSD?</h3>
-    LSD is designed to estimate dates of nodes in a phylogeny. With LSD, you may:
-    <ul>
+        LSD is a bioinformatic tool designed to estimate dates of nodes in a phylogeny.<br/>With LSD, you may:
+<ul>
     <li>Date ancestral nodes</li>
     <li>Compute confidence intervals on nodes</li>
     <li>Estimate the root</li>
     </ul>
-    <a class="btn btn-primary btn-lg" href="{% url 'lsd:help' %}" role="button">Learn more</a></p>
-  </p>
-
-  <p>
-    <h3>Running LSD</h3>
-    You can try LSD
-  <p><a class="btn btn-primary btn-lg" href="{% url 'lsd:new_run' %}" role="button">RUN LSD</a></p>
+<p class="imagehome"><a href="{% static "lsd/banner4_tree.png"%}"><img src="{% static "lsd/banner4_tree.png"%}" class="homepage"/></a></p>
+    
+    If you want to learn more about LSD, <a href="{% url 'lsd:help' %}" role="button">see help</a></p>
+    <a class="btn btn-primary btn-lg" href="{% url 'lsd:new_run' %}" role="button">RUN LSD</a></p>
   </p>
   
   <p>
