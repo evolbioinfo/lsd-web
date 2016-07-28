@@ -75,6 +75,16 @@ div.banner{
     padding:0px;
 }
 
+.siteTitle{
+    text-decoration: none;
+    color: #414141;
+}
+
+.siteTitle:hover{
+    text-decoration: none;
+    color: #414141;
+}
+
 div.front-image{
     background-image: url("banner3_tree.png");
     background-size: 400px 317px;
@@ -89,8 +99,16 @@ div.front-image{
     float:right;
 }
 
+.homepage:hover {
+    width:90%;
+    border: 1px solid #B1B1B1;
+    padding: 5px;
+    display:block;
+    z-index:999;
+}
+
 .homepage {
-    width: 70%;
+    width: 60%;
     border: 1px solid #B1B1B1;
     padding: 5px;
 }

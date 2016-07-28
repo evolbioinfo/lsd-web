@@ -3,6 +3,7 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
   <head>
+    <meta name="viewport" content="width=device-width" />
     <title>{% block title%}LSD Web application{% endblock %}</title>
     <!-- <link href='https://fonts.googleapis.com/css?family=Macondo' rel='stylesheet' type='text/css'> -->
     <!-- <link href='https://fonts.googleapis.com/css?family=Raleway' rel='stylesheet' type='text/css'> -->
@@ -30,9 +31,9 @@
       <div class="wrapper page-charte">
       <div class="nav-container">
         <div class="container">
-               <a href="https://c3bi.pasteur.fr/"><div class="logo">
+               <div class="logo"><a href="https://c3bi.pasteur.fr/">
 	       <img src="{% static "lsd/PasteurTheme/images/logo.jpg"%}"/>
-              </div></a>
+              </a></div>
               <div class="elementItem">
                   <nav class="navbar navbar-default">
                       <div class="container-fluid">
@@ -63,8 +64,8 @@
       <div class="header-container center">
         <div class="container">
 	  <div class="banner">
-            <h1> Least Squares Dating
-              <div class="subtitle">LSD Web application</div>
+            <h1><a class="siteTitle" href="/"> Least Squares Dating
+              <div class="subtitle">LSD Web application</div></a>
             </h1> 
           </div>
 	</div>
