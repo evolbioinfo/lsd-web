@@ -36,9 +36,9 @@ Analyzes are launched on the <a href="{% url 'lsd:new_run' %}">run</a> page.
       <li>In the case where you have a date file, you can upload it. The file should be formated as explained in the section "file formats".</li>
     </ul>
   </li>
-  <li><b>Confidence intervals:</b> You can then choose if you want to compute confidence intervals for estimated dates or not. The confidence interval estimation is generally slower since it involves running several times LSD algorithm (basically 100 runs).</li>
+  <li><b>Confidence intervals:</b> You can then choose if you want to compute confidence intervals for estimated dates (and rates) or not. The confidence interval estimation is generally slower since it involves running several times LSD algorithm (basically 100 runs).</li>
   <li><b>Substitution rate:</b> You may enter the supposed substitution rate for the tree. If you leave it blank, LSD will estimate it.</li>
-  <li><b>Sequence length: </b> Finally, you should adapt sequence length of the alignment that have been used to reconstruct the tree (1000 given by default).</li>
+  <li><b>Sequence length: </b> Finally, you should adapt sequence length of the alignment that have been used to reconstruct the tree (1000 given by default). Sequence length is used to compute the variances of branch lengths, and to generate simulated branch lengths for confidence interval computation.</li>
 </ol>
 <h3>Submit Job</h3>
 <p>Once you click on submit, a new job is created and added in the computing queue, waiting for its execution. It may be in "pending" state until the server finishes previous jobs.</p>
