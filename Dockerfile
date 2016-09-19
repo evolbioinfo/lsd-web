@@ -40,7 +40,7 @@ RUN wget http://download.redis.io/releases/redis-3.0.7.tar.gz \
     && cd .. \
     && rm -rf redis-3.0.7.tar.gz
 
-RUN yum -y install python27
+RUN yum -y install python27; yum clean all
 # Install pip / virtualenvwrapper
 #
 # add to .bashrc 
@@ -53,7 +53,7 @@ RUN source scl_source enable python27 \
 #####
 ##### add in .bashrc
 RUN echo "source /opt/rh/python27/root/usr/bin/virtualenvwrapper.sh" >> /root/.bashrc
-RUN yum -y install which httpd-devel
+RUN yum -y install which httpd-devel; yum clean all
 RUN source scl_source enable python27 \
     && source scl_source enable devtoolset-3 \
     && source /opt/rh/python27/root/usr/bin/virtualenvwrapper.sh \
@@ -90,7 +90,7 @@ RUN \
     && chown :apache /root/lsd_web/lsd_web/ \
     && chown -R :apache /root/lsd_web/static/
 
-RUN yum -y install git \
+RUN yum -y install git; yum clean all \
     && git clone https://github.com/tothuhien/lsd-0.3beta.git /root/lsd-0.3beta \
     && cd /root/lsd-0.3beta/src/ \
     && source scl_source enable devtoolset-3  \
