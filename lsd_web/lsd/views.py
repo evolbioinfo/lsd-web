@@ -62,7 +62,7 @@ def submit_run(request):
         if request.user.is_authenticated():
 	    r.run_user=request.user
 	    r.save()
-	lsdpath = os.getenv('LSDPATH') 
+	lsdpath = os.getenv('LSDPATH')
 	jid=submitLSD.delay(r.id,lsdpath)
 	context = {
 	    'status' : "Pending",
