@@ -17,6 +17,7 @@ class LSDRunner:
         tempdir=tempfile.mkdtemp()
         dateFile = open(os.path.join(tempdir, "date.txt"), "w+t")
         treeFile = open(os.path.join(tempdir, "tree.txt"), "w+t")
+        rateFile = open(os.path.join(tempdir, "rate.txt"), "w+t")
         groupsFile = open(os.path.join(tempdir, "groups.txt"), "w+t")
         # Taxon or node date file
         if len(self.lsdrun.runtaxondates_set.all())>0:
@@ -61,6 +62,11 @@ class LSDRunner:
         if self.lsdrun.run_rate_lower_bound != -1 :
             options.append("-t")
             options.append(str(self.lsdrun.run_rate_lower_bound))
+        # Substitution Rates
+        if self.dumpRates(rateFile):
+            options.append("-w")
+            options.append(rateFile.name)
+        rateFile.close()
         # Run variance
         if self.lsdrun.run_variance:
             options.append("-v");
@@ -92,7 +98,6 @@ class LSDRunner:
 
         self.lsdrun.run_out_message=self.lsdrun.run_out_message[-2000:]
         self.lsdrun.run_err_message=self.lsdrun.run_err_message[-2000:]
-
         self.lsdrun.save()
 
         resDateFileName = outputFile+".date.newick"
@@ -134,6 +139,16 @@ class LSDRunner:
     def dumpTrees(self,outfile):
         for tree in self.lsdrun.runtrees_set.all():
             outfile.write(tree.tree_newick+"\n")
+
+    # Returns True if one rate is given for every tree
+    # Returns False otherwise
+    def dumpRates(self,outfile):
+        rate = True
+        for tree in self.lsdrun.runtrees_set.all():
+            if tree.tree_subst_rate == -1:
+                rate = False
+            outfile.write(str(tree.tree_subst_rate)+"\n")
+        return rate
 
     def dumpGroups(self,outfile):
         outfile.write(str(len(self.lsdrun.runoutgroups_set.all()))+"\n")
