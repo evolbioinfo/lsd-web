@@ -16,7 +16,7 @@ RUN rpm --import http://ftp.scientificlinux.org/linux/scientific/5x/x86_64/RPM-G
  && yum -y install devtoolset-3-gcc-c++ \
  && scl enable devtoolset-3  bash
 
-RUN yum -y install postgresql postgresql-contrib postgresql-server postgresql-devel
+RUN yum -y install postgresql postgresql-contrib postgresql-server postgresql-devel; yum clean all
 RUN service postgresql initdb
 #
 COPY docker_files/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf
