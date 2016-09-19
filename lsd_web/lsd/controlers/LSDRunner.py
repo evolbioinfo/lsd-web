@@ -157,7 +157,7 @@ class LSDRunner:
 
     def parseRes(self,resFile):
         substrate = []
-        p = re.compile(".*rate (\d+(\.\d*){0,1}(e(-){0,1}\d+){0,1}) , tMRCA (\d+(\.\d+){0,1})")
+        p = re.compile(".*rate (\d+(\.\d*){0,1}(e(-){0,1}\d+){0,1}).*?(?:\[.*?\].*?){0,1}, tMRCA (\d+(\.\d+){0,1})")
         for line in resFile:
             m = p.match(line)
             if m:
