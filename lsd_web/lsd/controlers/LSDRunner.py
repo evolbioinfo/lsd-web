@@ -3,6 +3,7 @@ from subprocess import Popen, PIPE, STDOUT
 import tempfile
 import os
 import re
+import shutil
 
 class LSDRunner:
     """A runner to launch LSD program"""
@@ -128,7 +129,7 @@ class LSDRunner:
                 )
                 index+=1
         self.lsdrun.save()
-        #tempdir.close()
+        shutil.rmtree(tempdir)
         return outputFile
 
     def dumpDates(self,outfile):
