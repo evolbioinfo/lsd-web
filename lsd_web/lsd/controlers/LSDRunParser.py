@@ -69,12 +69,18 @@ class LSDRunParser:
         else:
             nb_samples=int(request.POST['nb_samples'])
 
+        confinterval=request.POST.get('with_conf_int', False)
+        if confinterval == 'on':
+            confinterval = True
+        if confinterval == 'off':
+            confinterval = False
+
         r = LSDRun(
             run_date             = timezone.now(),
             run_root_date        = rootdate,
             run_tips_date        = tipsdate,
             run_constraints      = request.POST.get('constraints', False),
-            run_with_conf_int    = request.POST.get('with_conf_int', False),
+            run_with_conf_int    = confinterval,
             run_nb_samples       = nb_samples,
             run_variance         = request.POST.get('variancesornot', False),
             run_seq_length       = seqlength,
