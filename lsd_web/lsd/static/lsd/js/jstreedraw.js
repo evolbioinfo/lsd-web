@@ -176,7 +176,7 @@ function parse_newick(newick_str, curnode, pos, level){
 	    }
 	    pos += matchBrlen[0].length;
 	} else if(matchSupport && newick_str.substr(pos-1,1)==')'){
-	    console.log(matchSupport[1])
+	    // console.log(matchSupport[1])
 	    if(level==0){
 		curnode.brsup = parseFloat(matchSupport[1]);
 	    }else{
