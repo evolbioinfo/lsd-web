@@ -28,7 +28,7 @@ def submitLSD(lsdrunid,lsdpath):
         return 'The submitLSD task (id=%s) executed with argument "%s" - %s - %s ' % (out,submitLSD.request.id,lsdrunid,lsdrun.run_date)
     except SoftTimeLimitExceeded  as e:
         lsdrun.run_status=lsdrun.ERROR
-        lsdrun.run_err_message = "Job time limit exceeded."
+        lsdrun.run_err_message = "Job time limit exceeded. If you need more computational resources, you may try the standalone version of lsd_web (https://github.com/fredericlemoine/lsd-web)"
         logging.exception("message")
         lsdrun.save()
         return ""
