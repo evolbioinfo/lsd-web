@@ -1,4 +1,7 @@
 # Introduction
+[Least-Squares Dating (LSD)](https://github.com/tothuhien/lsd-0.3beta) estimates rates and dates from phylogenies using least-squares method.
+
+lsd-web provides a web interface to LSD.
 
 # Deployment
 
