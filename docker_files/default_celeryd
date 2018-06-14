@@ -1,5 +1,5 @@
 CELERYD_NODES="worker1"
-CELERY_BIN="/root/.virtualenvs/django/bin/python -m celery"
+CELERY_BIN="python -m celery"
 CELERY_APP="lsd_web.celeryapp:app"
 CELERYD_CHDIR="/root/lsd_web"
 #CELERYD_OPTS="--time-limit=300 --concurrency=1"

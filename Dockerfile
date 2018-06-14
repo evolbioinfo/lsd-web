@@ -1,37 +1,39 @@
-FROM centos:6.7
+FROM ubuntu:16.04
 
 MAINTAINER Frederic Lemoine
 
-RUN yum -y install \
-    python27 \
-    libjpeg-devel \
-    libxml2-devel \
-    httpd \
+RUN apt-get update --fix-missing  \
+    && apt-get install -y \
+    python2.7 \
+    libjpeg8-dev \
+    libxml2-dev \
+    apache2 \
+    apache2-dev \
     tcl \
-    freetype-devel \
-    wget
+    libfreetype6-dev \
+    libfreetype6 \
+    wget \
+    make \
+    g++\
+    gcc \
+    postgresql \
+    postgresql-contrib \
+    tar \
+    python-pip \
+    git
 
-RUN rpm --import http://ftp.scientificlinux.org/linux/scientific/5x/x86_64/RPM-GPG-KEYs/RPM-GPG-KEY-cern \
- && wget -O /etc/yum.repos.d/slc6-scl.repo http://linuxsoft.cern.ch/cern/scl/slc6-scl.repo \
- && yum -y install devtoolset-3-gcc-c++ \
- && scl enable devtoolset-3  bash
 
-RUN yum -y install postgresql postgresql-contrib postgresql-server postgresql-devel; yum clean all
-RUN service postgresql initdb
-#
-COPY docker_files/pg_hba.conf /var/lib/pgsql/data/pg_hba.conf
-COPY docker_files/postgresql.conf /var/lib/pgsql/data/postgresql.conf
-RUN chown postgres:postgres  /var/lib/pgsql/data/pg_hba.conf  /var/lib/pgsql/data/postgresql.conf
-RUN service postgresql start
-
+COPY docker_files/pg_hba.conf /etc/postgresql/9.5/main/pg_hba.conf
+COPY docker_files/postgresql.conf /etc/postgresql/9.5/main/postgresql.conf
 COPY  docker_files/sql_init_script.sql .
-RUN service postgresql start \
+
+RUN chown postgres:postgres   /etc/postgresql/9.5/main/pg_hba.conf \
+    && chown postgres:postgres /etc/postgresql/9.5/main/postgresql.conf \
+    && service postgresql start \
     && psql -U postgres -a  -f sql_init_script.sql \
     && rm sql_init_script.sql 
 
-RUN yum -y install tar
 RUN wget http://download.redis.io/releases/redis-3.0.7.tar.gz \
-    && source scl_source enable devtoolset-3 \
     && tar -xzvf redis-3.0.7.tar.gz \
     && cd redis-3.0.7 \
     && make \
@@ -40,67 +42,32 @@ RUN wget http://download.redis.io/releases/redis-3.0.7.tar.gz \
     && cd .. \
     && rm -rf redis-3.0.7.tar.gz
 
-RUN yum -y install python27; yum clean all
-# Install pip / virtualenvwrapper
-#
-# add to .bashrc 
-RUN echo ". /opt/rh/python27/enable" >> /root/.bashrc
-RUN source scl_source enable python27 \
-    && easy_install pip \
-    && pip install virtualenvwrapper
-
-##### New virtualenv
-#####
-##### add in .bashrc
-RUN echo "source /opt/rh/python27/root/usr/bin/virtualenvwrapper.sh" >> /root/.bashrc
-RUN yum -y install which httpd-devel; yum clean all
-RUN source scl_source enable python27 \
-    && source scl_source enable devtoolset-3 \
-    && source /opt/rh/python27/root/usr/bin/virtualenvwrapper.sh \
-    && mkvirtualenv django \
-    && workon django \
-    && pip install --upgrade pip \
-    && pip install Django \
-    && pip install celery[redis]==3.1.20 \
-    && pip install six \
-    && pip install numpy \
-    && pip install Pillow \
-    && pip install biopython \
-    && pip install mod_wsgi \
-    && pip install psycopg2
-
-RUN echo "LoadModule wsgi_module /root/.virtualenvs/django/lib/python2.7/site-packages/mod_wsgi/server/mod_wsgi-py27.so" >>  /etc/httpd/conf/httpd.conf
 
 COPY lsd_web/ /root/lsd_web/
 
-RUN \
-    service postgresql start \
-    && source scl_source enable python27 \
-    && source /opt/rh/python27/root/usr/bin/virtualenvwrapper.sh \
-    && source scl_source enable devtoolset-3 \
-    && workon django \
-    && cd /root/lsd_web/ \
+WORKDIR /root/lsd_web/
+COPY docker_files/wait_for_postgres.sh .
+RUN chmod +x wait_for_postgres.sh \
+    && pip install -r requirements.txt \
+    && service postgresql start \
+    && ./wait_for_postgres.sh \
     && mv lsd_web/settings_deployed.py lsd_web/settings.py \
     && python manage.py makemigrations lsd \
     && python manage.py migrate \
     && python manage.py createsuperuser \
     && echo "yes" | python manage.py collectstatic \
-    && chown :apache /root/ \
-    && chown :apache /root/lsd_web/ \
-    && chown :apache /root/lsd_web/lsd_web/ \
-    && chown -R :apache /root/lsd_web/static/
+    && chown www-data:www-data /root/ \
+    && chown www-data:www-data /root/lsd_web/ \
+    && chown www-data:www-data /root/lsd_web/lsd_web/ \
+    && chown -R www-data:www-data /root/lsd_web/static/
 
-RUN yum -y install git; yum clean all \
-    && git clone https://github.com/tothuhien/lsd-0.3beta.git /root/lsd-0.3beta \
+RUN git clone https://github.com/tothuhien/lsd-0.3beta.git /root/lsd-0.3beta \
     && cd /root/lsd-0.3beta/src/ \
-    && source scl_source enable devtoolset-3  \
     && make
 
 ENV LSDPATH /root/lsd-0.3beta/src/lsd
 
-RUN yum -y history undo `yum history list git | head -n 4 | tail -n 1 | cut -f 1 -d '|'`
-
-COPY docker_files/django.conf /etc/httpd/conf.d/django.conf
+COPY docker_files/django.conf /etc/apache2/sites-enabled/000-default.conf
 COPY docker_files/default_celeryd /etc/default/celeryd
 COPY docker_files/celeryd /etc/init.d/celeryd
 

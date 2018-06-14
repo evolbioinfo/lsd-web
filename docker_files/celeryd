@@ -30,11 +30,6 @@
 #
 VERSION=10.1
 
-#source scl_source enable python27
-HOME=/root
-. /opt/rh/python27/enable
-. /opt/rh/python27/root/usr/bin/virtualenvwrapper.sh
-
 echo "celery init v${VERSION}."
 if [ $(id -u) -ne 0 ]; then
     echo "Error: This program can only be used by the root user."
