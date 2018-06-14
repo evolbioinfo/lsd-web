@@ -3,15 +3,51 @@
 
 lsd-web provides a web interface to LSD.
 
-# Deployment
+# Install
+
+## From sources (with conda)
+
+Get sources
+```
+git clone https://github.com/evolbioinfo/lsd-web.git
+cd lsd-web/
+```
+
+Get lsd sources
+```
+git clone https://github.com/tothuhien/lsd-0.3beta.git
+cd lsd-0.3beta
+make
+export LSDPATH=$PWD/src/lsd
+```
+
+Create conda environment
+ ```
+conda create --name lsd-web python=2.7
+source activate lsd-web
+```
+
+Configure the application (with sqlite)
+```
+cd lsd_web
+pip install -r requirements.txt
+apt-get install redis-server # Ubuntu / Debian
+python manage.py makemigrations
+```
+
+Run lsd-web
+```
+celery --app=lsd_web.celeryapp:app worker --loglevel=INFO
+python manage.py runserver
+```
 
 ## Docker
 
+You should first install [docker](https://docs.docker.com/engine/installation/).
+
 ### Build the image
 
-To build a docker image, you first need to install [docker](https://docs.docker.com/engine/installation/). Installation is explained for different systems.
-
-Then, you can build the lsd-web image:
+To build the docker image, then:
 
 ```[bash]
 docker build -t lsd-web .
@@ -20,30 +56,18 @@ docker build -t lsd-web .
 And finally run the container:
 
 ```
-docker run -d -p 8888:80 lsd-web 
+docker run -p 8080:80 lsd-web 
 ```
 
-The last command will start the container `lsd-web` in background. The webservice will be accessible through the port `8888` of localhost. You can then open your browser to (http://localhost:8888).
+You can then open your browser to (http://localhost:8080).
 
-### Specificity of MacOS (Docker toolbox)
-If you are running Docker toolbox under macos, docker should run using virtualbox. In that case, before starting the container, you should redirect the port 8888 of your macos host to the port 8888 of the linux machine.
+### From Docker Hub
 
-To do so, first get the name of the running virtual machine:
-
-```
-VBoxManage list runningvms
-```
-
-Then redirect the port:
+An image is already built on docker hub:
 
 ```
-VBoxManage controlvm "default" natpf1 "http,tcp,,8888,,8888"
+docker run -p 8080:80 evolbioinfo/lsd-web 
 ```
 
-Where "default" should be replaced by the name of the VM.
-
-Now, you can start the docker container:
-```
-docker run -d -p 8888:80 lsd-web 
-```
+You can then open your browser to (http://localhost:8080).
 
